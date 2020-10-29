@@ -1,0 +1,1 @@
+pandoc -s -o test.pdf --pdf-engine=xelatex -f "markdown_github+yaml_metadata_block" --template eisvogel.tex --listings --columns=50 --number-sections --toc --dpi=300 HEADER.YAML README.md

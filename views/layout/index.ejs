@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Meta tags -->
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="/styles/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="/styles/css/style.css" />
+
+        <title><%= siteName %> | <%= pageTitle %></title>
+    </head>
+
+    <body>
+        <main role="main"><%- include(`../pages/${template}`) %></main>
+
+        <!-- prettier-ignore -->
+        <%- include('./components/footer') %>
+
+        <!-- prettier-ignore -->
+        <%- include('./components/scripts') %>
+    </body>
+</html>

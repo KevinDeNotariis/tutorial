@@ -1,0 +1,19 @@
+{
+    "name": "test_1",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "start": "nodemon server"
+    },
+    "author": "kevin de notariis",
+    "license": "ISC",
+    "dependencies": {
+        "bootstrap": "^4.5.3",
+        "ejs": "^3.1.5",
+        "express": "^4.17.1",
+        "jquery": "^3.5.1"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.6"
+    }
+}
