@@ -1,7 +1,7 @@
 const express = require("express");
 
 const {
-    validateSanitize,
+    validateAndSanitize,
     register,
 } = require("../../controllers/userController");
 
@@ -15,7 +15,7 @@ module.exports = () => {
         });
     });
 
-    router.post("/", validateSanitize, register);
+    router.post("/", validateAndSanitize, register);
 
     return router;
 };

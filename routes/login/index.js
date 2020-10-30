@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { validateSanitize, login } = require("../../controllers/userController");
+const { login } = require("../../controllers/userController");
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ module.exports = () => {
         });
     });
 
-    router.post("/", validateSanitize, login);
+    router.post("/", login);
 
     return router;
 };

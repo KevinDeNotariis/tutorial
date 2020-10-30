@@ -3,6 +3,7 @@ const router = express.Router();
 
 const userRoute = require("./user");
 const registerRoute = require("./register");
+const loginRoute = require("./login");
 
 module.exports = () => {
     router.get("/", (req, res) => {
@@ -14,6 +15,7 @@ module.exports = () => {
 
     router.use("/user", userRoute());
     router.use("/register", registerRoute());
+    router.use("/login", loginRoute());
 
     return router;
 };

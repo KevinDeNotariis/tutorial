@@ -971,7 +971,7 @@ app.locals.siteName = "* Web Site Name *";
 >
 > <br>
 
-# CRUD Operations - MongoDB and Mongoose
+# Register And Login
 
 Since we have created a login button redirecting to `/login` and a register link redirecting to `/register`, we need to implement these routes and create the suitable pages, controllers and models for the Users. We will be using the **MVC design pattern** (Model - View - Controller) and we start here by incorporating MongoDB in our project.
 
@@ -994,7 +994,7 @@ If you do not have mongoDB installed, you can go here https://www.mongodb.com an
 In `server.js` let's connect to mongoDB utilizing `mongoose`, namely write:
 
 ```js
-momgoose.connect("mongodb://localhost/trainingDB", {
+mongoose.connect("mongodb://localhost/trainingDB", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
@@ -1083,7 +1083,7 @@ Create a folder `controllers` in the root directory and a `userController.js` in
 
 ```
 .
-├── _controllers_
+├── _controllers
 │   └── userController.js
 ├── _models
 │   └── userModel.js
@@ -1290,7 +1290,7 @@ Let's first add the register route. Create a `register` folder inside `routes` a
 
 ```
 .
-├── _controllers_
+├── _controllers
 │   └── userController.js
 ├── _models
 │   └── userModel.js
@@ -1302,7 +1302,7 @@ Let's first add the register route. Create a `register` folder inside `routes` a
 │   │       └── style.css
 │   └─ js
 ├── _routes
-├── _register_
+│   ├── _register
 │   │   └── index.js
 │   ├── _user
 │   │   └── index.js
@@ -1353,7 +1353,263 @@ Now, in `views/pages` add a `register.ejs` file. Open it up and put in there the
     <input type="text" name="email" placeholder="email" />
     <label>password</label>
     <input type="password" name="password" placeholder="email" />
+    <input type="submit" value="Submit" />
 </form>
 ```
 
+This is just a simple form in order to test our code, in the future we are going to style it more.
+
+Now, when in the homepage `http://localhost:3000` we click on `register here` we will be redirected to `/register` with the form just written.
+
+## Body-Parser
+
+In order to interpret what a form is returning, express needs a middleware called `body-parser` and we can install it:
+
+```bash
+npm i body-parser
+```
+
+Then we require it in `server.js` :
+
+```js
+const bodyParser = require("body-parser");
+```
+
+and add the following lines of code (just before the JWT middleware created before), one to parse `x-www-form-urlencoded` and one to parse JSON:
+
+```js
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+```
+
 ## Login Route and Page
+
+Analogously to the register route and page, we create a `login` folder inside `routes` and a `index.js` file inside this folder. Also, create a `login.ejs` inside `views/pages`. At this point the folder structure should look like:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── login
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── index.ejs
+│       ├── login.ejs
+│       └── register.ejs
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+In the same way as before, open up `routes/login/index.js` and put there the following code:
+
+```js
+const express = require("express");
+
+const { login } = require("../../controllers/userController");
+
+const router = express.Router();
+
+module.exports = () => {
+    router.get("/", (req, res) => {
+        res.render("layout", {
+            pageTitle: "Login",
+            template: "login",
+        });
+    });
+
+    router.post("/", login);
+
+    return router;
+};
+```
+
+while in `views/pages/login.ejs`:
+
+```html
+<form action="/login" method="POST">
+    <label>email</label>
+    <input type="text" name="email" placeholder="email" />
+    <label>password</label>
+    <input type="password" name="password" placeholder="password" />
+    <input type="submit" value="Submit" />
+</form>
+```
+
+## Serving the /login and /register routes
+
+If we now try to start the server and click on the login button or the register link, we will see that the server is not able to get these routes, why is that?
+
+Every route we have defined is inside `/routes` and it passes through `routes/index.js`, meaning that we need to use there the newly defined routes.
+
+Open up `routes/index.js` and require the following:
+
+```js
+const registerRoute = require("./register");
+const loginRoute = require("./login");
+```
+
+Now, before the `return router`, just add:
+
+```js
+router.use("/register", registerRoute());
+router.use("/login", loginRoute());
+```
+
+If we now try to nagivate to `/login` and `/register` we should see the forms created before.
+
+## Validate and Sanitize User Inputs
+
+At `http://localhost/register` one can register to the website, the email, password (hashed) and the creation date will be stored in the database, in particular in `trainingDB` database and in the collection `users`. However, one can insert everything they want in the email, even a non-email and there is still no way for our website to detect this fact, it will store it in the database regardless of its form.
+
+Also, in order to protect from injections, we need to sanitize the input, namely remove eventual html tags which may compromise our website.
+
+First, install the node module `express-validator`:
+
+```bash
+npm i express-validator
+```
+
+then in `controllers/userController.js` import the needed middlewares / functions:
+
+```js
+const { check, validationResult } = require('express-validator);
+```
+
+and then define:
+
+```js
+const validateAndSanitize = [
+    check("email").trim().isEmail().normalizeEmail().escape(),
+    check("password").trim().isLength({ min: 8 }).escape(),
+];
+```
+
+and in both `register` and `login` middlewares, at the beginning, add:
+
+```js
+const errors = validationResult(req);
+```
+
+Then we need to check whether this `errors` is empty, so that immediately after the above line, add:
+
+```js
+if (!errors.isEmpty()) {
+    res.json({ message: errors.toArray() });
+} else {
+    .........
+}
+```
+
+and in the `else` statement just move all the code that we have written before. The final `register` middleware should look like this:
+
+```js
+const register = (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.json({ message: errors.array() });
+    } else {
+        const newUser = new User(req.body);
+        newUser.hashPassword = bcrypt.hashSync(req.body.password, 10);
+        newUser.save((err, user) => {
+            if (err) {
+                return res.status(400).json({ message: err });
+            } else {
+                user.hashPassword = undefined;
+                return res.json(user);
+            }
+        });
+    }
+};
+```
+
+Now, do the same for `login` and also remember to export it `validateAndSanitize`:
+
+```js
+module.exports = {
+    validateAndSanitize,
+    loginRequired,
+    register,
+    login,
+};
+```
+
+Now, in `routes/login/index.js` and `routes/register/index.js` we need to import from `controllers/userController.js` also this newly created `validateAndSanitize`. I'll take as an example `routes/register/index.js` but the same thing is be replicated analogously also for `routes/login/index.js`:
+
+```js
+const {
+    validateAndSanitize,
+    register,
+} = require("../../controllers/userController");
+```
+
+and in the `router.post` add it as follows:
+
+```js
+router.post("/", validateAndSanitize, register);
+```
+
+Do the same for `routes/login/index.js` and now let's see how does the site respond to different inputs. Navigate to `http://localhost/register` and:
+
+1.  Write:
+
+    | email | password   |
+    | ----- | ---------- |
+    | kevin | helloworld |
+
+    and after pressing the submit, we should see a message telling us that the email we have inserted in not valid:
+
+        {"message":[{"value":"kevin","msg":"Invalid value","param":"email","location":"body"}]}
+
+2.  Write:
+
+    | email             | password |
+    | ----------------- | -------- |
+    | kevin@example.com | hello    |
+
+    after pressing the submit, we should see a message telling us that the password is not valid (it has a length < 8 characters):
+
+        {"message":[{"value":"hello","msg":"Invalid value","param":"password","location":"body"}]}
+
+3.  Write:
+
+    | email | password |
+    | ----- | -------- |
+    | kevin | hello    |
+
+    here, we should see both error messages:
+
+        {"message":[{"value":"kevin","msg":"Invalid value","param":"email","location":"body"},{"value":"hello","msg":"Invalid value","param":"password","location":"body"}]}
+
+4.  Write:
+
+    | email             | password   |
+    | ----------------- | ---------- |
+    | kevin@example.com | helloworld |
+
+    now, finally, we should see a message telling us that the user has been correctly created, so something of the following form:
+
+        {"created_date":"2020-10-30T17:08:05.895Z","_id":"5f9c4a5726b0dd2018df41d7","email":"kevin@example.com","__v":0}
+
+Now,

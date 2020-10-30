@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 
 const Schema = mongoose.Schema;
 
-module.exports = UserSchema = new Schema({
+const UserSchema = new Schema({
     email: {
         type: String,
         required: true,
@@ -21,3 +21,5 @@ module.exports = UserSchema = new Schema({
 UserSchema.methods.comparePassword = (password, hashPassword) => {
     return bcrypt.compareSync(password, hashPassword);
 };
+
+module.exports = UserSchema;

@@ -2,6 +2,13 @@ const express = require("express");
 const routes = require("./routes");
 const path = require("path");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+
+mongoose.connect("mongodb://localhost/trainingDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
 
 const app = express();
 
@@ -24,6 +31,9 @@ app.use(
 );
 
 app.locals.siteName = "* Web Site Name *";
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use((req, res, next) => {
     if (
