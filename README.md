@@ -1122,10 +1122,9 @@ Let's now open up `controllers/userController.js` and first import the needed mo
 ```js
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const { UserSchema } = require("../models/userModels");
+const { UserSchema } = require("../models/userModel");
 ```
 
 Let's define now the model that we are using, note that (from https://mongoosejs.com/docs/models.html):
@@ -1189,17 +1188,172 @@ const register = (req, res, next) => {
 Finally we implement the `login` as follow:
 
 ```js
-const login = (req, res, next) => {};
+const login = (req, res, next) => {
+    User.findOne(
+        {
+            email: req.body.email,
+        },
+        (err, user) => {
+            if (err) throw err;
+            if (!user) {
+                return res
+                    .status(401)
+                    .json({ message: "Authentication failed" });
+            } else {
+                if (
+                    !user.comparePassword(req.body.password, user.hashPassword)
+                ) {
+                    return res
+                        .status(401)
+                        .json({ message: "Authentication failed" });
+                } else {
+                    user.hashPassword = undefined;
+                    return res.json({
+                        token: jwt.sign(
+                            {
+                                email: user.email,
+                                _id: user.id,
+                            },
+                            "QuantumElectroDynamcics4Real"
+                        ),
+                    });
+                }
+            }
+        }
+    );
+};
 ```
+
+So let's break up this middleware:
+
+> -   First we query the database for the existence of a document with `email` field equals to the email typed in by the user ;
+> -   In the callback we receive an error (if occurs) and the document we asked for (if exists). So here we immediatly check if an error occurred, and if so we throw an error ;
+> -   If no errors occurred, we check whether there is a user in the database with the given email and if not we return a `401` status with a message telling that the authentication failed ;
+> -   If a user with the given email exists, then we check whether the password inserted coincide upon hashing with the hashed password stored with the given email. If the passwords do not match, we return a status `401` again with the same message as before ;
+> -   If the passwords match, we first remove the hashed password from user (since we do not pass to the front-end passwords) and then we return a JWT with the signed in email and user id, with the encryption word "QuantumElectroDynamics4Real".
+
+As for now, we are just returning a response with the JWT token just for testing purposes. Afterwards we will store it in an appropriate cookie session for security purposes.
+
+Finally, let's export all these functions:
+
+```js
+module.exports = {
+    loginRequired,
+    register,
+    login,
+};
+```
+
+### Set up JWT
+
+In `loginRequired` we have checked for a property of the `request` objecy, namely we checked for the existence of a `req.user`. We need then to define this property. In `server.js` first import `jsonwebtoken`:
+
+```js
+const jwt = require("jsonwebtoken");
+```
+
+and then, before `app.user("/", routes())` , let's implement JWT:
+
+```js
+app.use((req, res, next) => {
+    if (
+        req.headers &&
+        req.headers.authorization &&
+        req.headers.authorization.split(" ")[0] === "JWT"
+    ) {
+        jwt.verify(
+            req.headers.authorization.split(" ")[1],
+            "QuantumElectroDynamics4Real",
+            (err, decode) => {
+                if (err) res.user = undefined;
+                req.user = decode;
+                next();
+            }
+        );
+    } else {
+        req.user = undefined;
+        next();
+    }
+});
+```
+
+Let's break this up:
+
+> -   We check whether the incoming message has an header and if this header has an authorization field with first element indeed equal to 'JWT' ;
+> -   If this is the case, we check for the other part of the header authorization, namely the token itself with the secret word defined before.
+> -   The result of `.verify` will be a decoded token if the secret word is valid and we will store it in `req.user`. If there is an error, `decode` will be undefined and we respond with a `res.user` undefined.
+> -   Finally if there is no header / authorization / JWT part, then it means that the user is not authenticated.
 
 ## Register Route and Page
 
+Let's first add the register route. Create a `register` folder inside `routes` and a `index.js` inside it. The folder structure should now look like this:
+
+```
+.
+├── _controllers_
+│   └── userController.js
+├── _models
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+├── _register_
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       └── index.ejs
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+Inside the newly created `routes/register/index.js` add the following code:
+
+```js
+const express = require("express");
+
+const { register } = require("../../controllers/userController");
+
+const router = express.Router();
+
+module.exports = () => {
+    router.get("/", (req, res) => {
+        res.render("layout", {
+            pageTitle: "Register",
+            template: "register",
+        });
+    });
+
+    router.post("/", register);
+};
+```
+
+> -   We first import all the necesary modules, including our `register` created before ;
+> -   We then define a `GET` middleware as we have done in `routes/index`, but we pass a different `template` and `pageTitle` (we are going to create the register view in a moment) ;
+> -   Define a `POST` middleware and passing the `register` we created.
+
+Now, in `views/pages` add a `register.ejs` file. Open it up and put in there the following code:
+
+```html
+<form type="POST" action="/register">
+    <label>email</label>
+    <input type="text" name="email" placeholder="email" />
+    <label>password</label>
+    <input type="password" name="password" placeholder="email" />
+</form>
+```
+
 ## Login Route and Page
-
-```
-
-```
-
-```
-
-```

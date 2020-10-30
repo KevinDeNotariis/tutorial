@@ -1,6 +1,7 @@
 const express = require("express");
 const routes = require("./routes");
 const path = require("path");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -23,6 +24,27 @@ app.use(
 );
 
 app.locals.siteName = "* Web Site Name *";
+
+app.use((req, res, next) => {
+    if (
+        req.headers &&
+        req.headers.authorization &&
+        req.headers.authorization.split(" ")[0] === "JWT"
+    ) {
+        const token = jwt.verify(
+            req.headers.authorization.split(" ")[1],
+            "QuantumElectroDynamics4Real",
+            (err, decode) => {
+                if (err) res.user = undefined;
+                req.user = decode;
+                next();
+            }
+        );
+    } else {
+        req.user = undefined;
+        next();
+    }
+});
 
 app.use("/", routes());
 
