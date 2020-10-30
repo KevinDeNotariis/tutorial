@@ -956,3 +956,250 @@ and we have to define the variable `siteName`. Since this will be a global varia
 ```js
 app.locals.siteName = "* Web Site Name *";
 ```
+
+> We can also change in `views/layout/index.ejs` the following line:
+>
+> ```html
+> <title><%= pageTitle %></title>
+> ```
+>
+> with:
+>
+> ```html
+> <title><%= siteName %> | <%= pageTitle %></title>
+> ```
+>
+> <br>
+
+# CRUD Operations - MongoDB and Mongoose
+
+Since we have created a login button redirecting to `/login` and a register link redirecting to `/register`, we need to implement these routes and create the suitable pages, controllers and models for the Users. We will be using the **MVC design pattern** (Model - View - Controller) and we start here by incorporating MongoDB in our project.
+
+## Setting up MongoDB and mongoose
+
+First, we need to install the `mongoose` module, which will bring with it the `mongodb` module itself, so let's type in the terminal:
+
+```bash
+npm i mongoose
+```
+
+Then open up the `server.js` file and import `mongoose`:
+
+```js
+const mongoose = require("mongoose");
+```
+
+If you do not have mongoDB installed, you can go here https://www.mongodb.com and download it in you local machine and install it as a service, in this way it will be immediately ready to be used.
+
+In `server.js` let's connect to mongoDB utilizing `mongoose`, namely write:
+
+```js
+momgoose.connect("mongodb://localhost/trainingDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
+```
+
+> -   `trainingDB` will be the name of our database;
+> -   `useNewUrlParser` and `useUnifiedTopology` are two parameters that we need to set, otherwise mongoDB will complain about deprecation issues.
+
+MongoDB does not have a predefined structure, the collections in a database (which can be compared to tables in a SQL-type database) are filled with documents which can have completely different structure. In order to have a predefined structure, mongoose allows us to define so-called _Schemas_.
+
+### Create a Mongoose Schema
+
+Let's create a `models` folder in the root directory and then create a `models/userModel.js` file. The structure of the project should look like:
+
+```
+.
+├── _models
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       └── index.ejs
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+In this newly created file, let's import `mongoose` and `bcrypt`, the latter will be used to hash the password (install it via `npm i bcrypt`):
+
+```js
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+```
+
+Now, we define the `Schema`:
+
+```js
+const Schema = mongoose.Schema;
+
+module.exports = UserSchema = new Schema({
+    email: {
+        type: String,
+        required: true,
+    },
+    hashPassword: {
+        type: String,
+        required: true,
+    },
+    create_date: {
+        type: Date,
+        default: Date.now(),
+    },
+});
+```
+
+> We have defined an `email` field of type `String` which is required, a `hashPassword` field also of type `String` and required and a `create_date` which will store the date in which the user was created. Note that we are storing the password not as the user types it, but we store the _hashed password_, so that if someone gains access of our database, they couldn't use the hashed password to login.
+
+Finally, we need to add a method to `UserSchema` which compares the actual password (which will be used by the user to login) with the hashed password stored in the database:
+
+```js
+UserSchema.methods.comparePassword = (password, hashPassword) => {
+    return bcrypt.compareSync(password, hashPassword);
+};
+```
+
+Now that we have a schema, we can proceed to create a **userController** which will be used to handle the actions of the users.
+
+## User Controller
+
+Create a folder `controllers` in the root directory and a `userController.js` inside it. The folder structure shoul look like this:
+
+```
+.
+├── _controllers_
+│   └── userController.js
+├── _models
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       └── index.ejs
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+In `controllers/userController.js` we will define the middlewares that are going to be used by a user in its interactions with the website. To be sure that the user is indeed logged in and authorized to make the requests, we will use **JWTs** (Json Web Tokens) and in node we have a module called `jsonwebtoken` which we install by typing:
+
+```bash
+npm i jsonwebtoken
+```
+
+Let's now open up `controllers/userController.js` and first import the needed modules:
+
+```js
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+
+const { UserSchema } = require("../models/userModels");
+```
+
+Let's define now the model that we are using, note that (from https://mongoosejs.com/docs/models.html):
+
+> "Mongoose automatically looks for the plural, lowercased version of your model name"
+
+Namely, if we define a model called `User` (first argument of `mongoose.model()`), then mongoose will search for the collection named `users` in the database. Also keep in mind that an instance of a model is a document which will then be saved in the corresponding collection. Using this insight we write:
+
+```js
+const User = mongoose.model("User", UserSchema);
+```
+
+Now we can start adding the middlewares `register`, `login` and a `loginRequired`. The latter will be used before every other middleware to ensure that the user is logged in before doing anything.
+
+### loginRequired
+
+in our `userController.js` file let's add:
+
+```js
+const loginRequired = (req, res, next) => {
+    if (req.user) {
+        next();
+    } else {
+        return res.status(401).json({ message: "Not Authorized" });
+    }
+};
+```
+
+> If there is a user we pass to the next middleware, while if the user is not logged in, we return an "unauthorized" error status.
+
+### register
+
+Following the `loginRequired` function we add the `register`:
+
+```js
+const register = (req, res, next) => {
+    const newUser = new User(req.body);
+    newUser.hashPassword = bcrypt.hashSync(req.body.password, 10);
+    newUser.save((err, user) => {
+        if (err) {
+            return res.status(400).json({ message: err });
+        } else {
+            user.hashPassword = undefined;
+            return res.json(user);
+        }
+    });
+};
+```
+
+> **_Note:_**
+>
+> -   First we create an instance of the model, which is nothing but a document (for mongoDB) ;
+> -   Then we hash the password returned form the user input ;
+> -   We save the document ;
+> -   In the callback we check whether there is any error;
+> -   If no errors occurred, we remove the password from the user document, since we do not want to send back the password.
+> -   Finally we return the json with the data.
+
+### login
+
+Finally we implement the `login` as follow:
+
+```js
+const login = (req, res, next) => {};
+```
+
+## Register Route and Page
+
+## Login Route and Page
+
+```
+
+```
+
+```
+
+```
