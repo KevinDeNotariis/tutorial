@@ -1612,4 +1612,20 @@ Do the same for `routes/login/index.js` and now let's see how does the site resp
 
         {"created_date":"2020-10-30T17:08:05.895Z","_id":"5f9c4a5726b0dd2018df41d7","email":"kevin@example.com","__v":0}
 
-Now,
+If you now open up the shell, type `mongo` and then switch to the trainingDB, namely type
+
+```bash
+use trainingDB
+```
+
+now by querying the database to find all documents in the collection `users`:
+
+```bash
+db.users.find()
+```
+
+we should see the new element we have created.
+
+If we now go to the login page `http://localhost:3000/login` and we type the email and password that we have used in the register page (the correct ones) then we should see a response with the token, namely something like this:
+
+    {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImtldmluQGV4YW1wbGUuY29tIiwiX2lkIjoiNWY5YzRhNTcyNmIwZGQyMDE4ZGY0MWQ3IiwiaWF0IjoxNjA0MTQ1NDIzfQ.UOKCKo-bc8y4Il7pjzUUCQF1WS8y6obu1vXMvKF5jH4"}
