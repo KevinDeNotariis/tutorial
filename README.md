@@ -1637,3 +1637,103 @@ we should see the new element we have created.
 If we now go to the login page `http://localhost:3000/login` and we type the email and password that we have used in the register page (the correct ones) then we should see a response with the token, namely something like this:
 
     {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImtldmluQGV4YW1wbGUuY29tIiwiX2lkIjoiNWY5YzRhNTcyNmIwZGQyMDE4ZGY0MWQ3IiwiaWF0IjoxNjA0MTQ1NDIzfQ.UOKCKo-bc8y4Il7pjzUUCQF1WS8y6obu1vXMvKF5jH4"}
+
+# Cookies and JWT
+
+We have created the foundations of a register/login process and now we are going to refine these, implementing a way for the user to remain authenticated in one of the most possible secure way.
+
+We will employ a _short-lived_ **ACCESS_TOKEN** and a _long-lived_ **REFRESH_TOKEN** and below I will try to explain why we will opt for this choice.
+
+## JWT Authentication with Node.js
+
+There are several possible ways to handle the authentication of a user into a website, some more secure and some less secure.
+
+If one wants to use JsonWebTokens (JWT), then once these are created, there must be a process of storing and then retrieving.
+
+Since storing them in _local storage_ or _session storage_ is more susceptible to XSS (cross-site scripting) attacks, we will store the **ACCESS_TOKEN** in a _Cookie_ (since we will use HTTPOnly cookies). This token will have very short life time, this way if an attacker were to steal it, they could use it only for have a short period of time, minimizing the damages.
+
+On the contrary, the **REFRESH_TOKEN** will have a long life time, will be stored in the database (assigned to the user and hashed) and will be used to generate new **ACCESS_TOKENS** once these will be expired. Clearly if a hacker were to steal these REFRESH_TOKENS, then they could use them to generate the ACCESS_TOKENS, for this reason there must be suitable measures to protect the database and its access.
+
+## Create the Refresh Token Model
+
+In `models` create a new file: `refreshTokenModel.js`, open it up and add the following:
+
+```js
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+
+const Schema = mongoose.Schema;
+
+const RefreshTokenSchema = new Schema({
+    user_id: {
+        type: String,
+        required: true,
+    },
+    hashRefreshToken: {
+        type: String,
+        require: true,
+    },
+    created_date: {
+        type: Date,
+        default: Date.now(),
+    },
+});
+
+RefreshTokenSchema.methods.compareRefreshToken = (
+    refreshToken,
+    hashRefreshToken
+) => {
+    return bcrypt.compareSync(refreshToken, hashRefreshToken);
+};
+
+module.exports = RefreshTokenSchema;
+```
+
+> The `user_id` will be used to retrieve the REFRESH_TOKEN for a given user.
+
+The root directory structure should now be as follows:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   ├── refreshTokenModel.js
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── login
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── index.ejs
+│       ├── login.ejs
+│       └── register.ejs
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+## Add Environment Variables to store secret keys
+
+As we have already said, JsonWebTokens require a secret key which is used to encrypt the data to be stored in the token. Let's create a `.env` file in the root directory where we are going to put two different secret keys, one for the ACCESS_TOKENS and one for the REFRESH_TOKENS. We are also going to store the different lifetimes of these tokens:
+
+```
+
+```
