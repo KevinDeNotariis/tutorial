@@ -1,11 +1,11 @@
 const express = require("express");
 
-const { login } = require("../../controllers/userController");
+const { login, isLogged } = require("../../controllers/userController");
 
 const router = express.Router();
 
 module.exports = () => {
-    router.get("/", (req, res) => {
+    router.get("/", isLogged, (req, res) => {
         res.render("layout", {
             pageTitle: "Login",
             template: "login",
