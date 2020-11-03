@@ -64,16 +64,91 @@ const login = (req, res) => {
                             .status(401)
                             .json({ message: "Authentication failed" });
                     } else {
-                        user.hashPassword = undefined;
-                        return res.json({
-                            token: jwt.sign(
-                                {
-                                    email: user.email,
-                                    _id: user.id,
-                                },
-                                "QuantumElectroDynamics4Real"
-                            ),
+                        let payloadAccess = {
+                            email: user.email,
+                            _id: user.id,
+                            exp:
+                                Math.floor(Date.now() / 1000) +
+                                Number(process.env.ACCESS_TOKEN_LIFE),
+                        };
+
+                        let payloadRefresh = {
+                            email: user.email,
+                            _id: user.id,
+                            exp:
+                                Math.floor(Date.now() / 1000) +
+                                Number(process.env.REFRESH_TOKEN_LIFE),
+                        };
+
+                        let accessToken = jwt.sign(
+                            payloadAccess,
+                            process.env.ACCESS_TOKEN_SECRET,
+                            { algorithm: "HS256" }
+                        );
+
+                        let refreshToken = jwt.sign(
+                            payloadRefresh,
+                            process.env.REFRESH_TOKEN_SECRET,
+                            { algorithm: "HS256" }
+                        );
+
+                        RefreshToken.findOne(
+                            { user_id: user.id },
+                            (err, tokenUser) => {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({ message: err });
+                                } else {
+                                    let hashRefreshToken = bcrypt.hashSync(
+                                        refreshToken,
+                                        10
+                                    );
+                                    if (!tokenUser) {
+                                        let newToken = new RefreshToken({
+                                            user_id: user.id,
+                                            hashRefreshToken: hashRefreshToken,
+                                        });
+                                        newToken.save((err, token) => {
+                                            if (err) {
+                                                return res
+                                                    .status(400)
+                                                    .json({ message: err });
+                                            } else {
+                                                console.log(
+                                                    "Refresh token saved successfully"
+                                                );
+                                            }
+                                        });
+                                    } else {
+                                        RefreshToken.updateOne(
+                                            { user_id: user.id },
+                                            {
+                                                $set: {
+                                                    hashRefreshToken: hashRefreshToken,
+                                                },
+                                            },
+                                            (err, token) => {
+                                                if (err) {
+                                                    return res
+                                                        .status(400)
+                                                        .json({ message: err });
+                                                } else {
+                                                    console.log(
+                                                        "Refresh token updated successfully"
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    }
+                                }
+                            }
+                        );
+                        res.cookie("jwt", accessToken, {
+                            //secure: true,
+                            httpOnly: true,
                         });
+                        res.redirect("/home");
                     }
                 }
             }

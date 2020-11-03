@@ -4,6 +4,7 @@ const router = express.Router();
 const userRoute = require("./user");
 const registerRoute = require("./register");
 const loginRoute = require("./login");
+const homeRoute = require("./home");
 
 module.exports = () => {
     router.get("/", (req, res) => {
@@ -16,6 +17,7 @@ module.exports = () => {
     router.use("/user", userRoute());
     router.use("/register", registerRoute());
     router.use("/login", loginRoute());
+    router.use("/home", loginRequired, homeRoute());
 
     return router;
 };

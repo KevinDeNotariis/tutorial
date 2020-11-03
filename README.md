@@ -979,6 +979,36 @@ app.locals.siteName = "* Web Site Name *";
 >
 > <br>
 
+At this point the structure of the project should look like the following:
+
+```
+.
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _img
+│   │   └── front-image.jpg
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       └── index.ejs
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
 # Register And Login
 
 Since we have created a login button redirecting to `/login` and a register link redirecting to `/register`, we need to implement these routes and create the suitable pages, controllers and models for the Users. We will be using the **MVC design pattern** (Model - View - Controller) and we start here by incorporating MongoDB in our project.
@@ -1024,6 +1054,8 @@ Let's create a `models` folder in the root directory and then create a `models/u
 ├── _node_modules
 │   └── ...
 ├── _public
+│   ├── _img
+│   │   └── front-image.jpg
 │   ├── _styles
 │   │   └── _css
 │   │       └── style.css
@@ -1098,6 +1130,8 @@ Create a folder `controllers` in the root directory and a `userController.js` in
 ├── _node_modules
 │   └── ...
 ├── _public
+│   ├── _img
+│   │   └── front-image.jpg
 │   ├── _styles
 │   │   └── _css
 │   │       └── style.css
@@ -1305,6 +1339,8 @@ Let's first add the register route. Create a `register` folder inside `routes` a
 ├── _node_modules
 │   └── ...
 ├── _public
+│   ├── _img
+│   │   └── front-image.jpg
 │   ├── _styles
 │   │   └── _css
 │   │       └── style.css
@@ -1403,12 +1439,14 @@ Analogously to the register route and page, we create a `login` folder inside `r
 ├── _node_modules
 │   └── ...
 ├── _public
+│   ├── _img
+│   │   └── front-image.jpg
 │   ├── _styles
 │   │   └── _css
 │   │       └── style.css
 │   └─ js
 ├── _routes
-│   ├── login
+│   ├── _login
 │   │   └── index.js
 │   ├── _register
 │   │   └── index.js
@@ -1703,12 +1741,14 @@ The root directory structure should now be as follows:
 ├── _node_modules
 │   └── ...
 ├── _public
+│   ├── _img
+│   │   └── front-image.jpg
 │   ├── _styles
 │   │   └── _css
 │   │       └── style.css
 │   └─ js
 ├── _routes
-│   ├── login
+│   ├── _login
 │   │   └── index.js
 │   ├── _register
 │   │   └── index.js
@@ -1735,5 +1775,312 @@ The root directory structure should now be as follows:
 As we have already said, JsonWebTokens require a secret key which is used to encrypt the data to be stored in the token. Let's create a `.env` file in the root directory where we are going to put two different secret keys, one for the ACCESS_TOKENS and one for the REFRESH_TOKENS. We are also going to store the different lifetimes of these tokens:
 
 ```
+ACCESS_TOKEN_SECRET=fWFezBEMEdsFU3RzE95zRd5mt6axbVce
+ACCESS_TOKEN_LIFE=120
+REFRESH_TOKEN_SECRET=28TcXu8HGpvTFH9vh7QVr3qrff883xAj
+REFRESH_TOKEN_LIFE=86400
+```
 
+> -   In order to have the most possible secure keys, you can go the following site and get some random keys: https://keygen.io
+> -   The life time of the ACCESS_TOKEN is set to be `120` seconds, namely after 2 minutes the ACCESS_TOKEN will expire.
+> -   The life time for the REFRESH\*TOKEN is, instead, of `86400` seconds which are 24 hours. After this interval of time, the user _must_ log in again.
+
+In order to use these variables, we need to install a module called `dotenv`:
+
+```bash
+npm i dotenv
+```
+
+and then import it in the `server.js` as follows:
+
+```js
+require("dotenv").config();
+```
+
+We will be able to access these variables anywhere in the project by simply typing `process.env.ACCESS_TOKEN_LIFE` for example.
+
+The folder structure should now be:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   ├── refreshTokenModel.js
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _img
+│   │   └── front-image.jpg
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── _login
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── index.ejs
+│       ├── login.ejs
+│       └── register.ejs
+├── .env
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+## Login Improved
+
+Let's open up `controllers/userController.js` and improve the `login` middleware.
+
+First we need to import the refreshToken model we have created and create its schema. After
+
+```js
+const User = mongoose.model("User", UserSchema);
+```
+
+just put:
+
+```js
+const RefreshTokenSchema = require("../models/refreshTokenSchema");
+```
+
+and then after
+
+```js
+const User = mongoose.model("User", UserSchema);
+```
+
+put:
+
+```js
+const RefreshToken = mongoose.model("RefreshToken", RefreshTokenSchema);
+```
+
+Remove the following lines:
+
+```js
+user.hashPassword = undefined;
+return res.json({
+    token: jwt.sign(
+        {
+            email: user.email,
+            _id: user.id,
+        },
+        "QuantumElectroDynamics4Real"
+    ),
+});
+```
+
+And instead we are going to create the ACCESS_TOKEN and the REFRESH_TOKEN. Add then:
+
+```js
+let payloadAccess = {
+    email: user.email,
+    _id: user.id,
+    exp: Math.floor(Date.now() / 1000) + Number(process.env.ACCESS_TOKEN_LIFE),
+};
+
+let payloadRefresh = {
+    email: user.email,
+    _id: user.id,
+    exp: Math.floor(Date.now() / 1000) + Number(process.env.REFRESH_TOKEN_LIFE),
+};
+```
+
+> We are creating here the payloads of the JWTs, we pass the user email, the user id and finally the expiration date, which is calculated from the current date (in epoch time) and by adding the seconds corresponding to the chosen life time for ACCESS_TOKENS and REFRESH_TOKENS.
+
+Continuing:
+
+<!-- prettier-ignore -->
+```js
+let accessToken = jwt.sign(
+    payloadAccess, 
+    process.env.ACCESS_TOKEN_SECRET, 
+    { algorithm: "HS256" }
+);
+
+let refreshToken = jwt.sign(
+    payloadRefresh, 
+    process.env.REFRESH_TOKEN_SECRET, 
+    { algorithm: "HS256" }
+);
+```
+
+In this way we have generated the two tokens using the `HS256` algorithm for encryption and the secret keys we have created in the `.env` file.
+
+Now we need to see whether there already exist a document in the `refreshTokens` collection associated with the given user. Let's then add:
+
+```js
+RefreshToken.findOne({ user_id: user.id }, (err, tokenUser) => {
+    if (err) {
+        return res.status(400).json({ message: err });
+    } else {
+        let hashRefreshToken = bcrypt.hashSync(refreshToken, 10);
+        if (!tokenUser) {
+            let newToken = new RefreshToken({
+                user_id: user.id,
+                hashRefreshToken: hashRefreshToken,
+            });
+            newToken.save((err, token) => {
+                if (err) {
+                    return res.status(400).json({ message: err });
+                } else {
+                    console.log("Refresh token saved successfully");
+                }
+            });
+        } else {
+            RefreshToken.updateOne(
+                { user_id: user.id },
+                { $set: { hashRefreshToken: hashRefreshToken } },
+                (err, token) => {
+                    if (err) {
+                        return res.status(400).json({ message: err });
+                    } else {
+                        console.log("Refresh token updated successfully");
+                    }
+                }
+            );
+        }
+    }
+});
+```
+
+> -   First we query the database for the existence of the document with `user_id = user.id` in the `refreshTokens` collection and if any error occurs, we return a `401` status.
+> -   Then we check whether there exists such queried document, if not, we create a new document `newToken` with the `user_id = user.id` and with the `hashRefreshToken` given by the hashed `refreshToken`.
+> -   We then save it while logging a message telling the success of the operation.
+> -   If instead there already exists a document, we just update it, with the new `refreshToken`.
+
+Now that the checks on the refresh tokens has been made, we can proceed to attach the JWT to a cookie and then redirect to the `/home` route (which we will soon create):
+
+```js
+res.cookie("jwt", accessToken, {
+    //secure: true,
+    httpOnly: true,
+});
+res.redirect("/home");
+```
+
+> -   `httpOnly` will protect against XSS ;
+> -   The secure flag should be omitted when testing on a HTTP (otherwise the cookie will not be sent).
+
+In order to correctly parse cookies, we need to install `cookie-parser`:
+
+```bash
+npm i cookie-parser
+```
+
+and then in `server.js` add:
+
+```js
+...
+
+const cookieParser = require('cookie-parser');
+
+...
+
+app.use(cookieParser());
+```
+
+## Home Route and Page
+
+Let's add the `/home` route, which will be the page where users will be redirected after login.
+
+Create a `home` folder in `routes` and then inside it create an `index.js` with the following code:
+
+```js
+const express = require("express");
+
+const router = express.Router();
+
+module.exports = () => {
+    router.get("/", (req, res) => {
+        res.render("layout", {
+            pageTitle: "Home",
+            template: "home",
+        });
+    });
+
+    return router;
+};
+```
+
+in `routes/index.js` we need to serve this route, so import it:
+
+```js
+const homeRoute = require("./home");
+const { loginRequired } = require("../controllers/userControllers");
+```
+
+> _**Note:**_
+>
+> we have also imported the `loginRequired` middleware, which will be called before the home route in order to check whether the user is indeed logged in.
+
+and use it:
+
+```js
+router.use("/home", loginRequired, homeRoute());
+```
+
+Let's also create the view: in `views/pages` create a `home.ejs` file and inside there just put the following simple text:
+
+```html
+<h1>This is Home Page</h1>
+```
+
+At this point the project structure should be as follows:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   ├── refreshTokenModel.js
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _img
+│   │   └── front-image.jpg
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── home
+│   │   └── index.js
+│   ├── _login
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── home.ejs
+│       ├── index.ejs
+│       ├── login.ejs
+│       └── register.ejs
+├── .env
+├── package-lock.json
+├── package.json
+└── server.js
 ```
