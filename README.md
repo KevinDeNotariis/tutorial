@@ -13,11 +13,19 @@ I'm going to assume that the reader is (somewhat) familiar with:
 
 ## Tools
 
-I'm going to use VSCode as the editor for the course, both because of its wholesome number of functionalities and its built-in terminals.
+I'm going to use VSCode as the editor for the tutorial, both because of its huge number of functionalities and its built-in terminals.
 
 # First Steps
 
 ## Initialize Node
+
+Create a folder and name it as you prefer, open the command prompt and navigate inside this folder and type:
+
+```bash
+code .
+```
+
+This will open VSCode inside this folder.
 
 In order to start our project, first open the terminal integrated in VSCode and run the following command:
 
