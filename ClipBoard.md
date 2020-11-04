@@ -26,7 +26,3 @@ and in `views/layout/index.ejs` add the following line of code:
 ```
 
 immediately after the opening `<body>` tag. By saving the files and refreshing the webpage (with the server running), one should see the dark navigation bar appearing on top of the page, with two entries, a `Home` on left and a `Login` on the right. They still do not link to anything, and we will take care of this after.
-
-vittorio lombardi
-
-floriano

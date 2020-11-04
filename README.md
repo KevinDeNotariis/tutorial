@@ -2273,6 +2273,10 @@ RefreshToken.findOne(
 
 **Note that we have also added some `console.log` and these will be used to track the actual flow of the program since are going to test the above implementations soon**
 
+## Logout Route
+
+If someone were to steal the ACCESS_TOKEN, they would have access only for a small amount of time.
+
 ## Test the Project
 
 At this point we should be able to test our project. Let's start the server with `npm start` and then open the browser to `http://locahost:3000`.
@@ -2291,14 +2295,14 @@ At this point we should be able to test our project. Let's start the server with
 
 -   Now navigate to `http://locahost:3000/login` and insert the newly created user. Upon posting the request, we should be redirected to `http://locahost:3000/home` and checking the console (in the editor), we should see the following lines:
 
-    ```bash
+    ```
     - Checking Authorization
     user authorized
     ```
 
 -   Wait at least 2 minutes, and then try to refresh the `http://locahost:3000/home` page. Now, since the ACCESS_TOKEN is expired, we should see the following lines in the console:
 
-    ```console
+    ```
     - Checking Authorization
     - There is a problem in the Authentication
     - Access token has expired
