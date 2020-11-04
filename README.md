@@ -1690,85 +1690,7 @@ If one wants to use JsonWebTokens (JWT), then once these are created, there must
 
 Since storing them in _local storage_ or _session storage_ is more susceptible to XSS (cross-site scripting) attacks, we will store the **ACCESS_TOKEN** in a _Cookie_ (since we will use HTTPOnly cookies). This token will have very short life time, this way if an attacker were to steal it, they could use it only for have a short period of time, minimizing the damages.
 
-On the contrary, the **REFRESH_TOKEN** will have a long life time, will be stored in the database (assigned to the user and hashed) and will be used to generate new **ACCESS_TOKENS** once these will be expired. Clearly if a hacker were to steal these REFRESH_TOKENS, then they could use them to generate the ACCESS_TOKENS, for this reason there must be suitable measures to protect the database and its access.
-
-## Create the Refresh Token Model
-
-In `models` create a new file: `refreshTokenModel.js`, open it up and add the following:
-
-```js
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-
-const Schema = mongoose.Schema;
-
-const RefreshTokenSchema = new Schema({
-    user_id: {
-        type: String,
-        required: true,
-    },
-    hashRefreshToken: {
-        type: String,
-        require: true,
-    },
-    created_date: {
-        type: Date,
-        default: Date.now(),
-    },
-});
-
-RefreshTokenSchema.methods.compareRefreshToken = (
-    refreshToken,
-    hashRefreshToken
-) => {
-    return bcrypt.compareSync(refreshToken, hashRefreshToken);
-};
-
-module.exports = RefreshTokenSchema;
-```
-
-> The `user_id` will be used to retrieve the REFRESH_TOKEN for a given user.
-
-The root directory structure should now be as follows:
-
-```
-.
-├── _controllers
-│   └── userController.js
-├── _models
-│   ├── refreshTokenModel.js
-│   └── userModel.js
-├── _node_modules
-│   └── ...
-├── _public
-│   ├── _img
-│   │   └── front-image.jpg
-│   ├── _styles
-│   │   └── _css
-│   │       └── style.css
-│   └─ js
-├── _routes
-│   ├── _login
-│   │   └── index.js
-│   ├── _register
-│   │   └── index.js
-│   ├── _user
-│   │   └── index.js
-│   └─ index.js
-├── _views
-│   ├── _layout
-│   │   ├── _components
-│   │   │   ├── footer.ejs
-│   │   │   └── scripts.ejs
-│   │   └── index.js
-│   └── _pages
-│       ├── index.ejs
-│       ├── login.ejs
-│       └── register.ejs
-├── package-lock.json
-├── package.json
-└── server.js
-```
+On the contrary, the **REFRESH_TOKEN** will have a long life time, will be stored in the database (assigned to the user and encrypted) and will be used to generate new **ACCESS_TOKENS** once these will be expired. Clearly if a hacker were to steal these REFRESH_TOKENS, then they could use them to generate the ACCESS_TOKENS, for this reason there must be suitable measures to protect the database and its access.
 
 ## Add Environment Variables to store secret keys
 
@@ -1800,6 +1722,77 @@ require("dotenv").config();
 We will be able to access these variables anywhere in the project by simply typing `process.env.ACCESS_TOKEN_LIFE` for example.
 
 The folder structure should now be:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _img
+│   │   └── front-image.jpg
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── _login
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── index.ejs
+│       ├── login.ejs
+│       └── register.ejs
+├── .env
+├── package-lock.json
+├── package.json
+└── server.js
+```
+
+## Create the Refresh Token Model
+
+In `models` create a new file: `refreshTokenModel.js`, open it up and add the following:
+
+```js
+const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
+
+const RefreshTokenSchema = new Schema({
+    user_id: {
+        type: String,
+        required: true,
+    },
+    encryptedRefreshToken: {
+        type: String,
+        require: true,
+    },
+    created_date: {
+        type: Date,
+        default: Date.now(),
+    },
+});
+
+module.exports = RefreshTokenSchema;
+```
+
+> -   The `user_id` will be used to retrieve the REFRESH_TOKEN for a given user ;
+> -   The `encryptedRefreshToken` will be created by making use of two functions which we are going to define in `controllers/userController.js`.
+
+The root directory structure should now be as follows:
 
 ```
 .
@@ -1843,9 +1836,70 @@ The folder structure should now be:
 
 ## Login Improved
 
-Let's open up `controllers/userController.js` and improve the `login` middleware.
+Let's open up `controllers/userController.js` and first add the above mentioned encryption functions, so let's import the Node built-in module `crypto`:
 
-First we need to import the refreshToken model we have created and create its schema. After
+```js
+const crypto = require("crypto");
+```
+
+and then:
+
+```js
+const getEncryptedToken = (refreshToken, callback) => {
+    crypto.scrypt(
+        process.env.REFRESH_TOKEN_CYPHER,
+        process.env.REFRESH_TOKEN_SALT,
+        24,
+        (err, key) => {
+            crypto.randomFill(new Uint8Array(16), (err, iv) => {
+                const cipher = crypto.createCipheriv("aes-192-cbc", key, iv);
+                callback(
+                    iv +
+                        " " +
+                        cipher.update(refreshToken, "utf8", "hex") +
+                        cipher.final("hex")
+                );
+            });
+        }
+    );
+};
+
+const getDecryptedToken = (encryptedRefreshToken, callback) => {
+    crypto.scrypt(
+        process.env.REFRESH_TOKEN_CYPHER,
+        process.env.REFRESH_TOKEN_SALT,
+        24,
+        (err, key) => {
+            let iv = new Uint8Array(
+                encryptedRefreshToken.split(" ")[0].split(",")
+            );
+            const actualToken = encryptedRefreshToken.split(" ")[1];
+            const decipher = crypto.createDecipheriv("aes-192-cbc", key, iv);
+            callback(
+                decipher.update(actualToken, "hex", "utf8") +
+                    decipher.final("utf8")
+            );
+        }
+    );
+};
+```
+
+> -   The `getEncryptedToken` has been created by looking at the documentation of `crypto`, which can be found here https://nodejs.org/api/crypto.html#crypto_class_cipher. We encrypt the refresh token by using a password called REFRESH_TOKEN_CYPHER and a salt called REFRESH_TOKEN_SALT which we are goin to define in `.env`. Let's break down this method:
+>     1. First we call the `.scrypt` method of `crypto` which allows us to generate a key for the encryption. It uses a password and a salt ;
+>     2. Then we create a random `iv` (initialization vector) using `.randomFill` of `crypto` ;
+>     3. Afterwards we create a cypher object by invoking `.createCipheriv` which requires the algorithm (aes-192-cbc), the key and the iv.
+>     4. Finally we return a string in which we store the `iv` as first element then after a space the encrypted token using the methods of `crypto`. We need to store the `iv` since the decrpyt method will need it.
+> -   The `getDecryptedToken` works almost analogously with the difference that we do not generate the `iv` but we extract it from the encrypted token.
+> -   Since the `crypto` methods we are using are async, we pass a callback function to which will be called once the encrypting and decrypting has been completed.
+
+Let's then define the new secret key and the salt in `.env`. Open this file and add the following lines:
+
+```
+REFRESH_TOKEN_CYPHER=9d4yvFcC17PIzAep
+REFRESH_TOKEN_SALT=amsLIWB06DnG4w9i
+```
+
+Now, we need to import the refreshToken model we have created and create its schema. After
 
 ```js
 const User = mongoose.model("User", UserSchema);
@@ -1917,23 +1971,26 @@ let refreshToken = jwt.sign(
     process.env.REFRESH_TOKEN_SECRET, 
     { algorithm: "HS256" }
 );
+
+getEncryptedToken(refreshToken, (encryptedRefreshToken) => {
+    ...
+}
 ```
 
-In this way we have generated the two tokens using the `HS256` algorithm for encryption and the secret keys we have created in the `.env` file.
+In this way we have generated the two tokens using the `HS256` algorithm for encryption and the secret keys we have created in the `.env` file. Also, we have called the `getEncryptedToken` method, which will encrpyt the refresh token and then called the callback function.
 
-Now we need to see whether there already exist a document in the `refreshTokens` collection associated with the given user. Let's then add:
+Now in the callback we need to see whether there already exist a document in the `refreshTokens` collection associated with the given user. Let's then add in the callback:
 
 ```js
 RefreshToken.findOne({ user_id: user.id }, (err, tokenUser) => {
     if (err) {
         return res.status(400).json({ message: err });
     } else {
-        let hashRefreshToken = bcrypt.hashSync(refreshToken, 10);
         if (!tokenUser) {
             let newToken = new RefreshToken({
                 user_id: user.id,
-                hashRefreshToken: hashRefreshToken,
             });
+            newToken.encryptedRefreshToken = encryptedRefreshToken;
             newToken.save((err, token) => {
                 if (err) {
                     return res.status(400).json({ message: err });
@@ -1942,28 +1999,19 @@ RefreshToken.findOne({ user_id: user.id }, (err, tokenUser) => {
                 }
             });
         } else {
-            RefreshToken.updateOne(
-                { user_id: user.id },
-                { $set: { hashRefreshToken: hashRefreshToken } },
-                (err, token) => {
-                    if (err) {
-                        return res.status(400).json({ message: err });
-                    } else {
-                        console.log("Refresh token updated successfully");
-                    }
-                }
-            );
+            tokenUser.encryptedRefreshToken = encryptedRefreshToken;
+            console.log("Refresh token updated successfully");
         }
     }
 });
 ```
 
 > -   First we query the database for the existence of the document with `user_id = user.id` in the `refreshTokens` collection and if any error occurs, we return a `401` status.
-> -   Then we check whether there exists such queried document, if not, we create a new document `newToken` with the `user_id = user.id` and with the `hashRefreshToken` given by the hashed `refreshToken`.
+> -   Then we check whether there exists such queried document, if not, we create a new document `newToken` with the `user_id = user.id` and we set the field `encryptedRefreshToken`.
 > -   We then save it while logging a message telling the success of the operation.
-> -   If instead there already exists a document, we just update it, with the new `refreshToken`.
+> -   If instead there already exists a document, we just update it, with the new encrypted `refreshToken`.
 
-Now that the checks on the refresh tokens has been made, we can proceed to attach the JWT to a cookie and then redirect to the `/home` route (which we will soon create):
+Now that the checks on the refresh tokens have been made, we can proceed to attach the JWT to a cookie and then redirect to the `/home` route (which we will soon create):
 
 ```js
 res.cookie("jwt", accessToken, {
@@ -2017,7 +2065,7 @@ module.exports = () => {
 };
 ```
 
-in `routes/index.js` we need to serve this route, so import it:
+in `routes/index.js` we need to serve this route, so let's import it:
 
 ```js
 const homeRoute = require("./home");
@@ -2040,7 +2088,7 @@ Let's also create the view: in `views/pages` create a `home.ejs` file and inside
 <h1>This is Home Page</h1>
 ```
 
-At this point the project structure should be as follows:
+At this point the project structure should look like as follows:
 
 ```
 .
@@ -2059,7 +2107,7 @@ At this point the project structure should be as follows:
 │   │       └── style.css
 │   └─ js
 ├── _routes
-│   ├── home
+│   ├── _home
 │   │   └── index.js
 │   ├── _login
 │   │   └── index.js
@@ -2084,3 +2132,178 @@ At this point the project structure should be as follows:
 ├── package.json
 └── server.js
 ```
+
+## loginRequired Middleware
+
+Since we have changed the way we handle authorization, we need to change also the `loginRequired` middleware in `controllers/userController.js`. Before doing that, go to `server.js` and **delete** the following middleware (we do not need this anymore):
+
+```js
+app.use((req, res, next) => {
+    if (
+        req.headers &&
+        req.headers.authorization &&
+        req.headers.authorization.split(" ")[0] === "JWT"
+    ) {
+        const token = jwt.verify(
+            req.headers.authorization.split(" ")[1],
+            "QuantumElectroDynamics4Real",
+            (err, decode) => {
+                if (err) res.user = undefined;
+                req.user = decode;
+                next();
+            }
+        );
+    } else {
+        req.user = undefined;
+        next();
+    }
+});
+```
+
+Then, open up `controllers/userController.js` and let's start implementing the new `loginRequired`, namely first of all **delete** everything that was in this function.
+
+Since we have sent the to the client a cookie with the JWT, we first access this token and check whether it exists or not:
+
+```js
+let accessToken = req.cookie.jwt;
+
+if (!accessToken) {
+    return res.status(401).json({ message: "Not Authorized User" });
+}
+```
+
+Then if it exists, we verify it with the `.verify` method to which we may pass the callback function where the method will return a possible error and the decoded payload of the token:
+
+```js
+jwt.verify(accessToken, access.env.ACCESS_TOKEN_SECRET, (err, decode) => {
+    if (!err) {
+        console.log("user authorized");
+        next();
+    } else {
+        console.log("- There is a problem in the Authentication");
+        if (err.name !== "TokenExpiredError") {
+            return res.status(401).json({ message: "Not Authorized User" });
+        } else {
+            ...
+        }
+    }
+});
+```
+
+> -   If there are no errors we pass to the next middleware ;
+> -   Then we check whether the token is expired, if the error we received was not the `TokenExpiredError` error, then it means that the token has been compromised in some way and it will be required another login for the user ;
+> -   If the token is expired, then we are going to generate another one below.
+
+In the `else` statement, write the following:
+
+```js
+console.log("- Access token has expired");
+
+let decodedPayload = jwt.decode(accessToken, process.env.ACCESS_TOKEN_SECRET);
+
+console.log("- Checking if Refresh token is active");
+
+RefreshToken.findOne(
+    {
+        user_id: decodedPayload._id,
+    },
+    (err, refreshTokenDocument) => {
+        if (err) {
+            return res.status(400).json({ message: err });
+        } else if (!refreshTokenDocument) {
+            console.log("No refresh token found");
+            res.redirect("/login");
+        } else {
+            console.log("- Refresh token found, checking its validity");
+            getDecryptedToken(
+                refreshTokenDocument.encryptedRefreshToken,
+                (decryptedRefreshToken) => {
+                    jwt.verify(
+                        decryptedRefreshToken,
+                        process.env.REFRESH_TOKEN_SECRET,
+                        (err, refreshPayloadDecoded) => {
+                            if (err) {
+                                console.log(
+                                    "- Refresh token is not valid, maybe it is expired"
+                                );
+                                res.redirect("/login");
+                            } else {
+                                console.log(
+                                    "- Valid refresh token found, generating new Access Token"
+                                );
+                                let newPayloadAccess = {
+                                    email: decodedPayload.email,
+                                    _id: decodedPayload._id,
+                                    exp:
+                                        Math.floor(Date.now() / 1000) +
+                                        Number(process.env.ACCESS_TOKEN_LIFE),
+                                };
+                                let newAccessToken = jwt.sign(
+                                    newPayloadAccess,
+                                    process.env.ACCESS_TOKEN_SECRET,
+                                    {
+                                        algorithm: "HS256",
+                                    }
+                                );
+                                res.cookie("jwt", newAccessToken, {
+                                    //secure: true,
+                                    httpOnly: true,
+                                });
+                                console.log(
+                                    "New Access Token generated and sent to the client"
+                                );
+                                next();
+                            }
+                        }
+                    );
+                }
+            );
+        }
+    }
+);
+```
+
+> -   First we decode the accessToken which is expired so that we can retrieve the user.
+> -   Then we search in the database for a document in the `refreshTokens` collection which has the corresponding `user_id` , in case of an error we return a `400` status with the error in json format.
+> -   If no errors occur, then we check if the document exists, if not we redirect to login page ;
+> -   If the refresh token document exists, we decrypt the `encryptedRefreshToken` and in the callback we verify the validity of the token.
+> -   If an error occurs, it might mean that the refresh token is expired so we redirect the user to the login page.
+> -   If the refresh token is still valid and not expired, we create a new ACCESS_TOKEN, by defining a new payload and then signing in a new token.
+> -   Finally we set the cookie and call the next middleware.
+
+**Note that we have also added some `console.log` and these will be used to track the actual flow of the program since are going to test the above implementations soon**
+
+## Test the Project
+
+At this point we should be able to test our project. Let's start the server with `npm start` and then open the browser to `http://locahost:3000`.
+
+-   Trying to navigate to: `http://locahost:3000/home` should result in a:
+
+          {"message":"Not Authorized User"}
+
+-   Let's now go to `http://locahost:3000/register` and register a new user:
+
+    | email           | password   |
+    | --------------- | ---------- |
+    | hello@world.com | helloworld |
+
+    we can also check in the database the correct creation of the new user.
+
+-   Now navigate to `http://locahost:3000/login` and insert the newly created user. Upon posting the request, we should be redirected to `http://locahost:3000/home` and checking the console (in the editor), we should see the following lines:
+
+    ```bash
+    - Checking Authorization
+    user authorized
+    ```
+
+-   Wait at least 2 minutes, and then try to refresh the `http://locahost:3000/home` page. Now, since the ACCESS_TOKEN is expired, we should see the following lines in the console:
+
+    ```console
+    - Checking Authorization
+    - There is a problem in the Authentication
+    - Access token has expired
+    - Checking if Refresh token is active
+    - Refresh token found, checking its validity
+    - Valid refresh token found, generating new Access Token
+    New Access Token generated and sent to the client
+    ```

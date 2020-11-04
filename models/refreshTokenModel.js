@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
 
 const Schema = mongoose.Schema;
 
@@ -8,7 +7,7 @@ const RefreshTokenSchema = new Schema({
         type: String,
         required: true,
     },
-    hashRefreshToken: {
+    encryptedRefreshToken: {
         type: String,
         require: true,
     },
@@ -17,12 +16,5 @@ const RefreshTokenSchema = new Schema({
         default: Date.now(),
     },
 });
-
-RefreshTokenSchema.methods.compareRefreshToken = (
-    refreshToken,
-    hashRefreshToken
-) => {
-    return bcrypt.compareSync(refreshToken, hashRefreshToken);
-};
 
 module.exports = RefreshTokenSchema;

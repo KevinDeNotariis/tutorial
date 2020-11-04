@@ -1,9 +1,10 @@
 const express = require("express");
 const routes = require("./routes");
 const path = require("path");
-const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
 mongoose.connect("mongodb://localhost/trainingDB", {
     useNewUrlParser: true,
@@ -34,27 +35,7 @@ app.locals.siteName = "* Web Site Name *";
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-app.use((req, res, next) => {
-    if (
-        req.headers &&
-        req.headers.authorization &&
-        req.headers.authorization.split(" ")[0] === "JWT"
-    ) {
-        const token = jwt.verify(
-            req.headers.authorization.split(" ")[1],
-            "QuantumElectroDynamics4Real",
-            (err, decode) => {
-                if (err) res.user = undefined;
-                req.user = decode;
-                next();
-            }
-        );
-    } else {
-        req.user = undefined;
-        next();
-    }
-});
+app.use(cookieParser());
 
 app.use("/", routes());
 

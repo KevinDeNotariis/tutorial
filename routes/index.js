@@ -6,6 +6,8 @@ const registerRoute = require("./register");
 const loginRoute = require("./login");
 const homeRoute = require("./home");
 
+const { loginRequired } = require("../controllers/userController");
+
 module.exports = () => {
     router.get("/", (req, res) => {
         res.render("layout", {
