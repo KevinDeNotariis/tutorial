@@ -2447,6 +2447,8 @@ if (refreshTokenDocument.encryptedRefreshToken !== decodedPayload.refresh) {
         ...
 ```
 
+(The `getDecryptedToken` method call is the same as before)
+
 Lastly, when we generate a new ACCESS_TOKEN from the REFRESH_TOKEN, we need to add in the payload the encrypted REFRESH_TOKEN. So after
 
 ```js
@@ -2532,6 +2534,7 @@ const logout = (req, res) => {
             console.log("- Refresh Token removed successfully");
             console.log("- Removing associated cookie");
             res.cookie("jwt", { maxAge: 0 });
+            console.log("Redirecting to welcome page");
             return res.redirect("/");
         });
     });
@@ -2588,3 +2591,101 @@ At this point the folder structure should look like the following:
 ├── package.json
 └── server.js
 ```
+
+## Test Project Again
+
+First of all let's delete the document in the `refreshtokens` collection in the database (if there is one).
+
+Then let's navigate to `http://locahost:3000/login` and login with the email `hello@world.com` and password `helloworld` as before.
+
+We should be redirected to `/home` and in the console we should see as before:
+
+```bash
+Refresh token saved successfully
+- Checking Authorization
+user authorized
+```
+
+If we immediately refresh the page we should see:
+
+```bash
+- Checking Authorization
+user authorized
+```
+
+since the ACCESS_TOKEN is still valid.
+
+After at least 2 minutes, if we refresh the page we should see:
+
+```bash
+- Checking Authorization
+- There is a problem in the Authentication
+- Access token has expired
+- Checking if Refresh token associated to the user is in database
+- Refresh Token Found
+- Checking if it coincide with the one in the access token
+- Refresh tokens coincide, checking validity of refresh token
+- Valid refresh token found, generating new Access Token
+New Access Token generated and sent to the client
+```
+
+Now, let's open up the developer tools and go again to `network > home` and in `Request Headers` save the content of `Cookie`, which would be something of the form:
+
+```
+jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmEyOTUyZWE4MjFkZDNmNDg2NjAxOTciLCJyZWZyZXNoIjoiMTMzLDE0OSwxMCw3NSwyMDksMjEsMTk5LDE0MCwyMzAsMTgzLDQxLDEyNCw2OSwzMiwxNTAsODggOGRhMjdiODU2OWQ0NmFkZDYxMWM4YzA0ZTZlMDY0MjQxNjljNWQzZWJmNjBkNzYyMGQxZjM0OWUxODU1YjJlNGY5ZGEwMWRiYzU2YTA4YTE2NWU2MDFhZjJmODdkMzJhOTI5NmJkN2NiYTA5ZjA3ODgyOWEyYzVjNDY0Y2YzNDlmNDQwNzRlNWYzZTk5MDE4NWNkNWZhNzRkZjg0ZTM2M2UyMTBmOWU5NjRiY2JmNTE4ZTUxZjk3MzliYmM0MGQwMjJmZjM3ZWFjMjM2YmU4ZTcxZWY3YTIxNjgzYzNmMzA3ZDEzMTdmZWNhMzdkYzk5YTdlZTk1ZGZjZmVkZTQzNjIzNmU1MTFhYzJhN2I1NTAyZDg5YjA4Njg0YWYxYzJmYTJjMjFhNjcxNjdiODRhOWVjZGJjOTUyYjdlYzU1MjljM2Y5ZGRlZDYzZWE1ZTA3ZmJhZWMyNjkyNmFhODkyYiIsImV4cCI6MTYwNDU4MDk2NCwiaWF0IjoxNjA0NTgwODQ0fQ.RYUOUl4alrwvAMnBvHmnVSap3DlWKm9_clLfCr-RT4E
+```
+
+Navigate to `http://localhost:3000/logout` and click to `logout` we should be redirected to the welcome page `http://localhost:3000/` and in the console we should see:
+
+```bash
+- Checking Authorization
+user authorized
+- Logging out... verifying access token
+- Access token verified, removing refresh token from DB
+- Refresh Token removed successfully
+- Removing associated cookie
+Redirecting to welcome page
+```
+
+If we now try to navigate to `http://localhost:3000/home` we should see in the console:
+
+```bash
+- Checking Authorization
+- There is a problem in the Authentication
+```
+
+and the response in the front-end:
+
+```
+{"message":"Not Authorized User"}
+```
+
+Let's try to make a `GET` request of `http://localhost:3000/home` from postman by making use of the saved token. Open up postman and set a header with `key: Cookie` and `value` the string copied before (the ACCESS_TOKEN). Submit the request and we should see the following lines in the console:
+
+```bash
+- Checking Authorization
+- There is a problem in the Authentication
+- Access token has expired
+- Checking if Refresh token associated to the user is in database
+No refresh token found
+```
+
+and we should see in postman that we have been redirecting to the `/login` page.
+
+This is the behaviour that we had also before, namely if there is no REFRESH_TOKEN in the database, the server will not generate any ACCESS_TOKEN.
+
+Let's try now to login again, namely generating another REFRESH_TOKEN, which would be different from the one in the payload of our saved ACCESS_TOKEN. Go to `http://localhost:3000/login` and login again with the same credentials.
+
+Switch again to postman and send again the same `GET` request. Now in the console we should see:
+
+```bash
+- Checking Authorization
+- There is a problem in the Authentication
+- Access token has expired
+- Checking if Refresh token associated to the user is in database
+- Refresh Token Found
+- Checking if it coincide with the one in the access token
+Refresh tokens do not coincide, login again
+```
+
+namely the ACCESS_TOKEN the server created before is not valid anymore and the user is redirected to the login page.
