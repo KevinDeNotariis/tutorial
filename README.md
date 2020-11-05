@@ -2319,6 +2319,8 @@ At this point we should be able to test our project. Let's start the server with
     New Access Token generated and sent to the client
     ```
 
+    Now, for the next step, do not close this web page.
+
 -   Go to the mongoDB shell and swtich to our database:
 
     ```bash
@@ -2331,11 +2333,11 @@ At this point we should be able to test our project. Let's start the server with
     db.refreshtokens.remove({})
     ```
 
-    Now, in the browser, open the developer tools (in chrome just right click and select `inspect`), then in `network` under `name` click `home` and then copy the string under `Request Headers > Cookie`.
+    Now, in the browser, in the page opened before, namely at `http://locahost:3000/home`, open the developer tools (in chrome just right click and select `inspect`), then in `network` under `name` click `home` and then copy the string under `Request Headers > Cookie`.
 
     Navigate to `http://localhost:3000/login` and login again with the credetials created before. We should see in the console that a new refresh token has been created.
 
-    Go to postman and make a `GET` request to `http://localhost:3000/home` by setting a header with `key: Cookie` and `value` the string copied just before. Now, this ACCESS_TOKEN was created before using the refresh token we just deleted, however, upon making this request, the server will respond with a new ACCESS_TOKEN.
+    Go to postman (you can download it here https://www.postman.com) and make a `GET` request to `http://localhost:3000/home` by setting a header with `key: Cookie` and `value` the string copied just before. Now, this ACCESS_TOKEN was created before using the refresh token we just deleted, however, upon making this request, the server will respond with a new ACCESS_TOKEN and we will be correctly directed to `/home`.
 
     **Why?**
 

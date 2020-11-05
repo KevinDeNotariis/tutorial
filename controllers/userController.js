@@ -7,7 +7,6 @@ const crypto = require("crypto");
 
 const UserSchema = require("../models/userModel");
 const RefreshTokenSchema = require("../models/refreshTokenModel");
-const { access } = require("fs");
 
 const User = mongoose.model("User", UserSchema);
 const RefreshToken = mongoose.model("RefreshToken", RefreshTokenSchema);
