@@ -1,7 +1,43 @@
-<form action="/login" method="POST">
-    <label>email</label>
-    <input type="text" name="email" placeholder="email" />
-    <label>password</label>
-    <input type="password" name="password" placeholder="password" />
-    <input type="submit" value="Submit" />
-</form>
+<div class="LoginContainer mt-5" id="LoginContainer">
+    <div class="form-container sign-up-container mt-2">
+        <form action="/register" method="POST">
+            <h1 class="font-weight-bold">Create Account</h1>
+            <input type="email" placeholder="Email" name="email" />
+            <input type="password" placeholder="Password" name="password" />
+            <input class="but" type="submit" value="Register" />
+        </form>
+    </div>
+
+    <div class="form-container sign-in-container">
+        <form action="/login" method="POST">
+            <h1 class="font-weight-bold">Sign in</h1>
+            <input type="email" placeholder="Email" name="email" />
+            <input type="password" placeholder="Password" name="password" />
+            <input class="but" type="submit" value="Login" />
+        </form>
+    </div>
+
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1 class="font-weight-bold">Good to see you!</h1>
+                <div class="container textContainer">
+                    <p class="loginP">
+                        You already have an account? <br />Sign in!
+                    </p>
+                </div>
+                <button class="but" id="signIn">Login</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1 class="font-weight-bold">Hello, Friend!</h1>
+                <div class="container textContainer">
+                    <p class="loginP">
+                        You don't have an account yet? Don't worry! You still
+                        can join us
+                    </p>
+                </div>
+                <button class="but" id="signUp">Register</button>
+            </div>
+        </div>
+    </div>
+</div>

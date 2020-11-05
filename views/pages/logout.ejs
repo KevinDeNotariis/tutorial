@@ -1,3 +1,17 @@
-<form method="POST" action="/logout">
-    <input type="submit" value="Logout" />
-</form>
+<div class="LogoutContainer mt-5" id="LogoutContainer">
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-right">
+                <h1 class="font-weight-bold">Logging out</h1>
+                <div class="container textContainer">
+                    <p class="logoutP">
+                        Are you sure you would like to logout?
+                    </p>
+                </div>
+                <form method="POST" action="/logout">
+                    <input class="but" type="submit" value="Yes, I'm sure" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

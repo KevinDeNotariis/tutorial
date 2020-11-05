@@ -12,6 +12,10 @@
         <link rel="stylesheet" href="/styles/css/bootstrap.min.css" />
         <link rel="stylesheet" href="/styles/css/style.css" />
 
+        <% if(typeof style !== 'undefined'){%>
+        <link rel="stylesheet" href="/styles/css/<%= style %>.css" />
+        <% } %>
+
         <title><%= siteName %> | <%= pageTitle %></title>
     </head>
 
@@ -23,5 +27,9 @@
 
         <!-- prettier-ignore -->
         <%- include('./components/scripts') %>
+
+        <% if(typeof script !== 'undefined') { %>
+        <script language="javascript" src="/js/<%= script %>.js"></script>
+        <% } %>
     </body>
 </html>
