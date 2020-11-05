@@ -5,6 +5,7 @@ const userRoute = require("./user");
 const registerRoute = require("./register");
 const loginRoute = require("./login");
 const homeRoute = require("./home");
+const logoutRoute = require("./logout");
 
 const { loginRequired } = require("../controllers/userController");
 
@@ -20,6 +21,7 @@ module.exports = () => {
     router.use("/register", registerRoute());
     router.use("/login", loginRoute());
     router.use("/home", loginRequired, homeRoute());
+    router.use("/logout", loginRequired, logoutRoute());
 
     return router;
 };

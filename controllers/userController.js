@@ -7,6 +7,7 @@ const crypto = require("crypto");
 
 const UserSchema = require("../models/userModel");
 const RefreshTokenSchema = require("../models/refreshTokenModel");
+const { access } = require("fs");
 
 const User = mongoose.model("User", UserSchema);
 const RefreshToken = mongoose.model("RefreshToken", RefreshTokenSchema);
@@ -54,6 +55,26 @@ const getDecryptedToken = (encryptedRefreshToken, callback) => {
     );
 };
 
+const logout = (req, res) => {
+    let accessToken = req.cookies.jwt;
+
+    console.log("- Logging out... verifying access token");
+    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
+        if (err)
+            return res.status(401).json({ message: "User not Authenticated" });
+
+        console.log("- Access token verified, removing refresh token from DB");
+        RefreshToken.deleteOne({ user_id: decode._id }, (err) => {
+            if (err) return res.status(400).json({ message: err });
+
+            console.log("- Refresh Token removed successfully");
+            console.log("- Removing associated cookie");
+            res.cookie("jwt", { maxAge: 0 });
+            return res.redirect("/");
+        });
+    });
+};
+
 const loginRequired = (req, res, next) => {
     let accessToken = req.cookies.jwt;
 
@@ -76,7 +97,9 @@ const loginRequired = (req, res, next) => {
                     accessToken,
                     process.env.ACCESS_TOKEN_SECRET
                 );
-                console.log("- Checking if Refresh token is active");
+                console.log(
+                    "- Checking if Refresh token associated to the user is in database"
+                );
                 RefreshToken.findOne(
                     {
                         user_id: decodedPayload._id,
@@ -88,62 +111,80 @@ const loginRequired = (req, res, next) => {
                             console.log("No refresh token found");
                             return res.redirect("/login");
                         } else {
+                            console.log("- Refresh Token Found");
                             console.log(
-                                "- Refresh token found, checking its validity"
+                                "- Checking if it coincide with the one in the access token"
                             );
-                            getDecryptedToken(
-                                refreshTokenDocument.encryptedRefreshToken,
-                                (decryptedRefreshToken) => {
-                                    jwt.verify(
-                                        decryptedRefreshToken,
-                                        process.env.REFRESH_TOKEN_SECRET,
-                                        (err, refreshPayloadDecoded) => {
-                                            if (err) {
-                                                console.log(
-                                                    "- Refresh token is not valid, maybe it is expired"
-                                                );
-                                                return res.redirect("/login");
-                                            } else {
-                                                console.log(
-                                                    "- Valid refresh token found, generating new Access Token"
-                                                );
-                                                let newPayloadAccess = {
-                                                    email: decodedPayload.email,
-                                                    _id: decodedPayload._id,
-                                                    exp:
-                                                        Math.floor(
-                                                            Date.now() / 1000
-                                                        ) +
-                                                        Number(
-                                                            process.env
-                                                                .ACCESS_TOKEN_LIFE
-                                                        ),
-                                                };
-                                                let newAccessToken = jwt.sign(
-                                                    newPayloadAccess,
-                                                    process.env
-                                                        .ACCESS_TOKEN_SECRET,
-                                                    {
-                                                        algorithm: "HS256",
-                                                    }
-                                                );
-                                                res.cookie(
-                                                    "jwt",
-                                                    newAccessToken,
-                                                    {
-                                                        //secure: true,
-                                                        httpOnly: true,
-                                                    }
-                                                );
-                                                console.log(
-                                                    "New Access Token generated and sent to the client"
-                                                );
-                                                next();
+                            if (
+                                refreshTokenDocument.encryptedRefreshToken !==
+                                decodedPayload.refresh
+                            ) {
+                                console.log(
+                                    "Refresh tokens do not coincide, login again"
+                                );
+                                return res.redirect("/login");
+                            } else {
+                                console.log(
+                                    "- Refresh tokens coincide, checking validity of refresh token"
+                                );
+                                getDecryptedToken(
+                                    refreshTokenDocument.encryptedRefreshToken,
+                                    (decryptedRefreshToken) => {
+                                        jwt.verify(
+                                            decryptedRefreshToken,
+                                            process.env.REFRESH_TOKEN_SECRET,
+                                            (err, refreshPayloadDecoded) => {
+                                                if (err) {
+                                                    console.log(
+                                                        "- Refresh token is not valid, maybe it is expired"
+                                                    );
+                                                    return res.redirect(
+                                                        "/login"
+                                                    );
+                                                } else {
+                                                    console.log(
+                                                        "- Valid refresh token found, generating new Access Token"
+                                                    );
+                                                    let newPayloadAccess = {
+                                                        _id: decodedPayload._id,
+                                                        refresh:
+                                                            refreshTokenDocument.encryptedRefreshToken,
+                                                        exp:
+                                                            Math.floor(
+                                                                Date.now() /
+                                                                    1000
+                                                            ) +
+                                                            Number(
+                                                                process.env
+                                                                    .ACCESS_TOKEN_LIFE
+                                                            ),
+                                                    };
+                                                    let newAccessToken = jwt.sign(
+                                                        newPayloadAccess,
+                                                        process.env
+                                                            .ACCESS_TOKEN_SECRET,
+                                                        {
+                                                            algorithm: "HS256",
+                                                        }
+                                                    );
+                                                    res.cookie(
+                                                        "jwt",
+                                                        newAccessToken,
+                                                        {
+                                                            //secure: true,
+                                                            httpOnly: true,
+                                                        }
+                                                    );
+                                                    console.log(
+                                                        "New Access Token generated and sent to the client"
+                                                    );
+                                                    next();
+                                                }
                                             }
-                                        }
-                                    );
-                                }
-                            );
+                                        );
+                                    }
+                                );
+                            }
                         }
                     }
                 );
@@ -196,27 +237,12 @@ const login = (req, res) => {
                             .status(401)
                             .json({ message: "Authentication failed" });
                     } else {
-                        let payloadAccess = {
-                            email: user.email,
-                            _id: user.id,
-                            exp:
-                                Math.floor(Date.now() / 1000) +
-                                Number(process.env.ACCESS_TOKEN_LIFE),
-                        };
-
                         let payloadRefresh = {
-                            email: user.email,
                             _id: user.id,
                             exp:
                                 Math.floor(Date.now() / 1000) +
                                 Number(process.env.REFRESH_TOKEN_LIFE),
                         };
-
-                        let accessToken = jwt.sign(
-                            payloadAccess,
-                            process.env.ACCESS_TOKEN_SECRET,
-                            { algorithm: "HS256" }
-                        );
 
                         let refreshToken = jwt.sign(
                             payloadRefresh,
@@ -227,6 +253,20 @@ const login = (req, res) => {
                         getEncryptedToken(
                             refreshToken,
                             (encryptedRefreshToken) => {
+                                let payloadAccess = {
+                                    _id: user.id,
+                                    refresh: encryptedRefreshToken,
+                                    exp:
+                                        Math.floor(Date.now() / 1000) +
+                                        Number(process.env.ACCESS_TOKEN_LIFE),
+                                };
+
+                                let accessToken = jwt.sign(
+                                    payloadAccess,
+                                    process.env.ACCESS_TOKEN_SECRET,
+                                    { algorithm: "HS256" }
+                                );
+
                                 RefreshToken.findOne(
                                     { user_id: user.id },
                                     (err, tokenUser) => {
@@ -256,9 +296,25 @@ const login = (req, res) => {
                                                     }
                                                 });
                                             } else {
-                                                tokenUser.encryptedRefreshToken = encryptedRefreshToken;
-                                                console.log(
-                                                    "Refresh token updated successfully"
+                                                RefreshToken.updateOne(
+                                                    { user_id: user.id },
+                                                    {
+                                                        $set: {
+                                                            encryptedRefreshToken: encryptedRefreshToken,
+                                                        },
+                                                    },
+                                                    (err) => {
+                                                        if (err)
+                                                            return res
+                                                                .status(400)
+                                                                .json({
+                                                                    message: err,
+                                                                });
+
+                                                        console.log(
+                                                            "Refresh token updated successfully"
+                                                        );
+                                                    }
                                                 );
                                             }
                                         }
@@ -280,6 +336,7 @@ const login = (req, res) => {
 
 module.exports = {
     validateAndSanitize,
+    logout,
     loginRequired,
     login,
     register,

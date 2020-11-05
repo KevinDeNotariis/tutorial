@@ -1942,19 +1942,17 @@ And instead we are going to create the ACCESS_TOKEN and the REFRESH_TOKEN. Add t
 
 ```js
 let payloadAccess = {
-    email: user.email,
     _id: user.id,
     exp: Math.floor(Date.now() / 1000) + Number(process.env.ACCESS_TOKEN_LIFE),
 };
 
 let payloadRefresh = {
-    email: user.email,
     _id: user.id,
     exp: Math.floor(Date.now() / 1000) + Number(process.env.REFRESH_TOKEN_LIFE),
 };
 ```
 
-> We are creating here the payloads of the JWTs, we pass the user email, the user id and finally the expiration date, which is calculated from the current date (in epoch time) and by adding the seconds corresponding to the chosen life time for ACCESS_TOKENS and REFRESH_TOKENS.
+> We are creating here the payloads of the JWTs, we pass the user id and the expiration date (we do not need to pass the user email to the front end), which is calculated from the current date (in epoch time) and by adding the seconds corresponding to the chosen life time for ACCESS_TOKENS and REFRESH_TOKENS.
 
 Continuing:
 
@@ -1999,8 +1997,22 @@ RefreshToken.findOne({ user_id: user.id }, (err, tokenUser) => {
                 }
             });
         } else {
-            tokenUser.encryptedRefreshToken = encryptedRefreshToken;
-            console.log("Refresh token updated successfully");
+            RefreshToken.updateOne(
+                { user_id: user.id },
+                {
+                    $set: {
+                        encryptedRefreshToken: encryptedRefreshToken,
+                    },
+                },
+                (err) => {
+                    if (err)
+                        return res.status(400).json({
+                            message: err,
+                        });
+
+                    console.log("Refresh token updated successfully");
+                }
+            );
         }
     }
 });
@@ -2232,7 +2244,6 @@ RefreshToken.findOne(
                                     "- Valid refresh token found, generating new Access Token"
                                 );
                                 let newPayloadAccess = {
-                                    email: decodedPayload.email,
                                     _id: decodedPayload._id,
                                     exp:
                                         Math.floor(Date.now() / 1000) +
@@ -2273,10 +2284,6 @@ RefreshToken.findOne(
 
 **Note that we have also added some `console.log` and these will be used to track the actual flow of the program since are going to test the above implementations soon**
 
-## Logout Route
-
-If someone were to steal the ACCESS_TOKEN, they would have access only for a small amount of time.
-
 ## Test the Project
 
 At this point we should be able to test our project. Let's start the server with `npm start` and then open the browser to `http://locahost:3000`.
@@ -2311,3 +2318,271 @@ At this point we should be able to test our project. Let's start the server with
     - Valid refresh token found, generating new Access Token
     New Access Token generated and sent to the client
     ```
+
+-   Go to the mongoDB shell and swtich to our database:
+
+    ```bash
+    use trainingDB
+    ```
+
+    and then delete the document in the `refreshtokens` collection:
+
+    ```bash
+    db.refreshtokens.remove({})
+    ```
+
+    Now, in the browser, open the developer tools (in chrome just right click and select `inspect`), then in `network` under `name` click `home` and then copy the string under `Request Headers > Cookie`.
+
+    Navigate to `http://localhost:3000/login` and login again with the credetials created before. We should see in the console that a new refresh token has been created.
+
+    Go to postman and make a `GET` request to `http://localhost:3000/home` by setting a header with `key: Cookie` and `value` the string copied just before. Now, this ACCESS_TOKEN was created before using the refresh token we just deleted, however, upon making this request, the server will respond with a new ACCESS_TOKEN.
+
+    **Why?**
+
+    _This is because the server checks that the received ACCESS_TOKEN is valid, then it checks whether it is expired. If it is expired, then it just looks in the database to find a refresh token and if a refresh token is found (and is not expired valid) then it will send back another ACCESS_TOKEN. This means that a given ACCESS_TOKEN (expired) can always be used to gain a new valid ACCESS_TOKEN, provided there is a REFRESH_TOKEN in the database. We would like to avoid this situation, since we have no way to invalidate a given token._
+
+    > In order to resolve this problem, we will attach to every ACCESS_TOKEN the corresponding REFRESH_TOKEN and upon validating the authorization, we will check whether the REFERSH_TOKEN in the payload of the ACCESS_TOKEN coincides with the REFERSH_TOKEN in the database. If these do not coincide we will redirect the user to the login page. In this way, we will have also a way to invalidate ACCESS_TOKEN, namely just deleting the REFRESH_TOKEN and creating a new one.
+
+## Implementing the invalidation of a token
+
+Let's start by adding in the payload of ACCESS_TOKENs the corresponding REFRESH_TOKEN.
+
+In `controllers/userController` scroll to the `login` middleware, and instead of:
+
+<!-- prettier-ignore -->
+```js
+let payloadAccess = {
+    _id: user.id,
+    exp: Math.floor(Date.now() / 1000) + Number(process.env.ACCESS_TOKEN_LIFE),
+};
+
+let payloadRefresh = {
+    _id: user.id,
+    exp: Math.floor(Date.now() / 1000) + Number(process.env.REFRESH_TOKEN_LIFE),
+};
+
+let accessToken = jwt.sign(
+    payloadAccess, 
+    process.env.ACCESS_TOKEN_SECRET, 
+    { algorithm: "HS256" }
+);
+
+let refreshToken = jwt.sign(
+    payloadRefresh, 
+    process.env.REFRESH_TOKEN_SECRET, 
+    { algorithm: "HS256" }
+);
+```
+
+we are going to first create the REFRESH_TOKEN and then the ACCESS_TOKEN by putting the REFRESH_TOKEN in its payload:
+
+```js
+let payloadAccess = {
+    _id: user.id,
+    refresh: encryptedRefreshToken,
+    exp: Math.floor(Date.now() / 1000) + Number(process.env.ACCESS_TOKEN_LIFE),
+};
+
+let accessToken = jwt.sign(payloadAccess, process.env.ACCESS_TOKEN_SECRET, {
+    algorithm: "HS256",
+});
+```
+
+and then :
+
+```js
+getEncryptedToken(refreshToken, (encryptedRefreshToken) => {
+    let payloadAccess = {
+        _id: user.id,
+        refresh: encryptedRefreshToken,
+        exp:
+            Math.floor(Date.now() / 1000) +
+            Number(process.env.ACCESS_TOKEN_LIFE),
+    };
+
+    let accessToken = jwt.sign(payloadAccess, process.env.ACCESS_TOKEN_SECRET, {
+        algorithm: "HS256",
+    });
+
+    RefreshToken.findOne(
+        ...
+```
+
+> Clearly we are setting the REFRESH_TOKEN in the ACCESS_TOKEN encrypted since we do not want to pass it to the front-end as it is.
+
+Now, in `loginRequired` we need to check if the REFRESH_TOKEN in the ACCESS_TOKEN coincide with the REFRESH_TOKEN stored in the database.
+
+Navigate to:
+
+```js
+RefreshToken.findOne(
+    {
+        user_id: decodedPayload._id,
+    },
+    (err, refreshTokenDocument) => {
+        if (err) {
+            return res.status(400).json({ message: err });
+        } else if (!refreshTokenDocument) {
+            console.log("No refresh token found");
+            return res.redirect("/login");
+        } else {
+            ...
+```
+
+then instead of the three dots we are going to put the following:
+
+```js
+console.log("- Refresh Token Found");
+console.log("- Checking if it coincide with the one in the access token");
+if (refreshTokenDocument.encryptedRefreshToken !== decodedPayload.refresh) {
+    console.log("Refresh tokens do not coincide, login again");
+    return res.redirect("/login");
+} else {
+    console.log(
+        "- Refresh tokens coincide, checking validity of refresh token"
+    );
+    getDecryptedToken(
+        ...
+```
+
+Lastly, when we generate a new ACCESS_TOKEN from the REFRESH_TOKEN, we need to add in the payload the encrypted REFRESH_TOKEN. So after
+
+```js
+console.log("- Valid refresh token found, generating new Access Token");
+```
+
+in the `newPayloadAccess` add the field:
+
+```js
+refresh: refreshTokenDocument.encryptedRefreshToken,
+```
+
+And everything else is left the same.
+
+## Logout
+
+Let's now implement an API which will allow the user to logout, with the effect of removing the `REFRESH_TOKEN` in the database, invalidating every ACCESS_TOKEN previously generated with it.
+
+Let's create a folder `logout` inside `routes` and an `index.js` file inside it.
+
+Open it up and put the following code:
+
+```js
+const express = require("express");
+
+const { logout } = require("../../controllers/userController");
+
+const router = express.Router();
+
+module.exports = () => {
+    router.get("/", (req, res) => {
+        res.render("layout", {
+            pageTitle: "Logout",
+            template: "logout",
+        });
+    });
+
+    router.post("/", logout);
+
+    return router;
+};
+```
+
+We need to create the middleware `logout` in `controller/userController.js`, the page to render in `views/pages` and serve the route in `routes/index.js`.
+
+Let's first create the page: in `views/pages` create a file `logout.ejs` and put in there the following code:
+
+```html
+<form method="POST" action="/logout">
+    <input type="submit" value="Logout" />
+</form>
+```
+
+then open up `routes/index.js` and add:
+
+```js
+const logoutRoute = require("./logout");
+```
+
+and before `return router` just put:
+
+```js
+router.use("/logout", loginRequired, logoutRoute());
+```
+
+> Clearly the user must be logged in before logout.
+
+Finally in `controllers/userController.js` add the middleware:
+
+```js
+const logout = (req, res) => {
+    let accessToken = req.cookies.jwt;
+
+    console.log("- Logging out... verifying access token");
+    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
+        if (err)
+            return res.status(401).json({ message: "User not Authenticated" });
+
+        console.log("- Access token verified, removing refresh token from DB");
+        RefreshToken.deleteOne({ user_id: decode._id }, (err) => {
+            if (err) return res.status(400).json({ message: err });
+
+            console.log("- Refresh Token removed successfully");
+            console.log("- Removing associated cookie");
+            res.cookie("jwt", { maxAge: 0 });
+            return res.redirect("/");
+        });
+    });
+};
+```
+
+> -   First we verify the ACCESS_TOKEN, but since this middleware comes after `loginRequired`, it should never pop an error here ;
+> -   Then we delete the REFRESH_TOKEN in the database and also we delete the cookie carrying the ACCESS_TOKEN.
+
+At this point the folder structure should look like the following:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   ├── refreshTokenModel.js
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _img
+│   │   └── front-image.jpg
+│   ├── _styles
+│   │   └── _css
+│   │       └── style.css
+│   └─ js
+├── _routes
+│   ├── _home
+│   │   └── index.js
+│   ├── _login
+│   │   └── index.js
+│   ├── _logout
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── home.ejs
+│       ├── index.ejs
+│       ├── login.ejs
+│       ├── logout.ejs
+│       └── register.ejs
+├── .env
+├── package-lock.json
+├── package.json
+└── server.js
+```
