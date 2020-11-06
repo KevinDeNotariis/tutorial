@@ -7,6 +7,7 @@ module.exports = () => {
         res.render("layout", {
             pageTitle: "Home",
             template: "home",
+            style: "home",
         });
     });
 

@@ -864,7 +864,7 @@ I've also added some comments explaining the different parts coded. The `CSS` cl
 ```css
 img.bg {
     min-height: 100%;
-    min-width: 1024px;
+    min-width: 1700px;
 
     width: 100%;
     height: auto;
@@ -874,10 +874,10 @@ img.bg {
     left: 0;
 }
 
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1700px) {
     img.bg {
         left: 50%;
-        margin-left: -512px;
+        margin-left: -850px;
     }
 }
 
@@ -2689,3 +2689,546 @@ Refresh tokens do not coincide, login again
 ```
 
 namely the ACCESS_TOKEN the server created before is not valid anymore and the user is redirected to the login page.
+
+## Front-end improvements
+
+Let's enhance the user experience visiting our website by styling a little bit the newly created pages.
+
+### Login page
+
+First, for the login page I'll make use of this wonderful design https://mdbootstrap.com/snippets/jquery/maja_maj/1208894 (with some minor changes). In `views/pages/login.ejs` let's substitute its content with the following:
+
+```html
+<div class="LoginContainer mt-5" id="LoginContainer">
+    <div class="form-container sign-up-container mt-2">
+        <form action="/register" method="POST">
+            <h1 class="font-weight-bold">Create Account</h1>
+            <input type="email" placeholder="Email" name="email" />
+            <input type="password" placeholder="Password" name="password" />
+            <input class="but" type="submit" value="Register" />
+        </form>
+    </div>
+
+    <div class="form-container sign-in-container">
+        <form action="/login" method="POST">
+            <h1 class="font-weight-bold">Sign in</h1>
+            <input type="email" placeholder="Email" name="email" />
+            <input type="password" placeholder="Password" name="password" />
+            <input class="but" type="submit" value="Login" />
+        </form>
+    </div>
+
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1 class="font-weight-bold">Good to see you!</h1>
+                <div class="container textContainer">
+                    <p class="loginP">
+                        You already have an account? <br />Sign in!
+                    </p>
+                </div>
+                <button class="but" id="signIn">Login</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1 class="font-weight-bold">Hello, Friend!</h1>
+                <div class="container textContainer">
+                    <p class="loginP">
+                        You don't have an account yet? Don't worry! You still
+                        can join us
+                    </p>
+                </div>
+                <button class="but" id="signUp">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+Create a `login.css` in `public/styles/css` and put in there the following:
+
+```css
+body {
+    background-color: #333;
+}
+.loginP {
+    font-size: 14px;
+    font-weight: 100;
+    line-height: 20px;
+    letter-spacing: 0.5px;
+    margin: 0.5em;
+}
+
+.textContainer {
+    background-color: rgba(51, 51, 51, 0.788);
+    border-radius: 3em;
+    margin-top: 3em;
+    margin-bottom: 3em;
+}
+
+a {
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+    margin: 15px 0;
+}
+
+.but {
+    border-radius: 20px;
+    border: 1px solid #ffffff;
+    background-color: #33b5e5;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 14px 35px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+form {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 50px;
+    height: 100%;
+    text-align: center;
+}
+
+input {
+    background-color: #eee;
+    border: none;
+    padding: 12px 15px;
+    margin: 8px 0;
+    width: 100%;
+}
+
+.LoginContainer {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    position: relative;
+    overflow: hidden;
+    width: 768px;
+    max-width: 100%;
+    min-height: 480px;
+    margin: auto;
+}
+
+.form-container {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    transition: all 0.6s ease-in-out;
+}
+
+.sign-in-container {
+    left: 0;
+    width: 50%;
+    z-index: 2;
+}
+
+.sign-up-container {
+    left: 0;
+    width: 50%;
+    opacity: 0;
+    z-index: 1;
+}
+
+.LoginContainer.right-panel-active .sign-in-container {
+    transform: translateX(100%);
+}
+
+.LoginContainer.right-panel-active .sign-up-container {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 5;
+    animation: show 0.6s;
+}
+
+@keyframes show {
+    0%,
+    49.99% {
+        opacity: 0;
+        z-index: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 1;
+        z-index: 5;
+    }
+}
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.6s ease-in-out;
+    z-index: 100;
+}
+
+.LoginContainer.right-panel-active .overlay-container {
+    transform: translateX(-100%);
+}
+
+.overlay {
+    background: url("/img/login.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 0 0;
+    color: rgb(255, 255, 255);
+    position: relative;
+    left: -100%;
+    height: 100%;
+    width: 200%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out;
+}
+
+.LoginContainer.right-panel-active .overlay {
+    transform: translateX(50%);
+}
+
+.overlay-panel {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 40px;
+    text-align: center;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out;
+}
+
+.overlay-left {
+    transform: translateX(-20%);
+}
+
+.LoginContainer.right-panel-active .overlay-left {
+    transform: translateX(0);
+}
+
+.overlay-right {
+    right: 0;
+    transform: translateX(0);
+}
+
+.LoginContainer.right-panel-active .overlay-right {
+    transform: translateX(20%);
+}
+```
+
+Now, in the `.overlay` we see that we use the image `login.jpg` stored in `/img` (namely in `public/img`). We can download an image from from for example https://unsplash.com/ , rename it `login.jpg` and put in the `public/img` folder. In order for the login and register page to work correctly, we also need to add a script. In `public/js` let's create a `login.js` with the following code inside:
+
+```js
+const signUpButton = document.getElementById("signUp");
+const signInButton = document.getElementById("signIn");
+const container = document.getElementById("LoginContainer");
+
+signUpButton.addEventListener("click", () => {
+    container.classList.add("right-panel-active");
+});
+
+signInButton.addEventListener("click", () => {
+    container.classList.remove("right-panel-active");
+});
+```
+
+We need now to be able to load these `CSS` and Javascript file into our `login.ejs` page. In order to do that, we will pass two variables to the page from the `login` route, telling the view to load the right `CSS` and script file.
+
+Open up `routes/login/index.js` and in `res.render` after `template:login` two more fields:
+
+```
+style: "login",
+script: "login"
+```
+
+Now, in `views/layout/index.ejs` we will insert two if-statements checking for the existence of the above fields, and in case of positive result, the given script and css will be loaded.
+
+Before the following line:
+
+```html
+<title><%= siteName %> | <%= pageTitle %></title>
+```
+
+let's put:
+
+```html
+<% if(typeof style !== 'undefined'){%>
+<link rel="stylesheet" href="/styles/css/<%= style %>.css" />
+<% } %>
+```
+
+and also before the closing tag `</body>` put:
+
+```html
+<% if(typeof script !== 'undefined') { %>
+<script language="javascript" src="/js/<%= script %>.js"></script>
+<% } %>
+```
+
+By browsing to `http://localhost:3000/login` we should see a nice looking login page, with the possibility to also register. This means that we can **delete** the `views/pages/register.ejs` and also in `routes/register/index.js` we can **delete** the `router.get` route.
+
+### Logout page
+
+Open up `views/pages/logout.ejs` and substitute its content with the following:
+
+```html
+<div class="LogoutContainer mt-5" id="LogoutContainer">
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-right">
+                <h1 class="font-weight-bold">Logging out</h1>
+                <div class="container textContainer">
+                    <p class="logoutP">
+                        Are you sure you would like to logout?
+                    </p>
+                </div>
+                <form method="POST" action="/logout">
+                    <input class="but" type="submit" value="Yes, I'm sure" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+and let's create a `logout.css` file in `public/styles/css` with the following content:
+
+```css
+body {
+    background-color: #333;
+}
+.logoutP {
+    font-size: 20px;
+    font-weight: 10;
+    line-height: 20px;
+    letter-spacing: 0.5px;
+    margin: 0.5em;
+}
+
+.textContainer {
+    border-radius: 3em;
+    margin-top: 3em;
+    margin-bottom: 3em;
+}
+
+a {
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+    margin: 15px 0;
+}
+
+.but {
+    border-radius: 20px;
+    border: 1px solid #ffffff;
+    background-color: #39cf40;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 14px 35px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.LogoutContainer {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    position: relative;
+    overflow: hidden;
+    width: 768px;
+    max-width: 100%;
+    min-height: 480px;
+    margin: auto;
+}
+
+.overlay-container {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 100;
+}
+.overlay {
+    background: url("/img/logout.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 0 0;
+    color: rgb(255, 255, 255);
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.overlay-panel {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 40px;
+    text-align: center;
+    top: 0;
+    height: 100%;
+    width: 50%;
+}
+
+.overlay-right {
+    right: 0;
+    transform: translateX(0);
+}
+```
+
+In order for this to work, download and image, rename it `logout.jpg` and put in `public/img/`.
+
+We need now to tell the page to load the correct `CSS`. Open up `routes/logout/index.js` and in the `router.render` method add another field below the `template: "logout"`:
+
+```
+style: "logout"
+```
+
+Now, after login, if we navigate to `http://localhost:3000/logout` we should see a nice centered card with the background image and a text with a button telling us if we are sure to logout.
+
+### Home Page
+
+Finally, let's open up `views/pages/home.ejs` and substitute its content with the following:
+
+```html
+<img src="/img/home.jpg" class="bg" style="z-index: -1" />
+<div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+    <header class="masthead mb-8">
+        <div style="color: #333" class="inner">
+            <h3 class="masthead-brand">Home</h3>
+            <nav class="nav nav-masthead justify-content-center">
+                <a class="nav-link active" href="#">Home</a>
+                <a class="nav-link" href="\training">Training</a>
+                <a class="nav-link" href="\logout">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main role="main" class="inner cover">
+        <h1 class="cover-heading">Hello Username!</h1>
+        <div
+            style="
+                background-color: rgba(255, 255, 255, 0.301);
+                border-radius: 3em;
+                text-align: center;
+            "
+        >
+            <p style="padding: 3px" class="lead">
+                Navigate to your training sessions to start keeping track of
+                your progresses
+            </p>
+        </div>
+    </main>
+</div>
+```
+
+Again, download an image, call it `home.jpg` and put it in `public/img/`.
+
+Also, create a `home.css` file in `public/styles/css` with the following content:
+
+```css
+a,
+a:focus,
+a:hover {
+    color: #fff;
+}
+
+.btn-secondary,
+.btn-secondary:hover,
+.btn-secondary:focus {
+    color: black;
+    text-shadow: none;
+    background-color: rgba(255, 255, 255, 0.274);
+    border: 0.05rem solid #fff;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    display: -ms-flexbox;
+    display: -webkit-box;
+    display: flex;
+    -ms-flex-pack: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+
+    color: #333;
+    text-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 5rem rgba(0, 0, 0, 0.5);
+}
+
+.cover-container {
+    max-width: 1000px;
+}
+
+.masthead {
+    margin-bottom: 2rem;
+}
+
+.masthead-brand {
+    margin-bottom: 0;
+}
+
+.nav-masthead .nav-link {
+    padding: 0.25rem 0;
+    font-weight: 700;
+    color: #333;
+    background-color: transparent;
+    border-bottom: 0.25rem solid transparent;
+}
+
+.nav-masthead .nav-link:hover,
+.nav-masthead .nav-link:focus {
+    border-bottom-color: rgba(0, 0, 0, 0.5);
+}
+
+.nav-masthead .nav-link + .nav-link {
+    margin-left: 1rem;
+}
+
+.nav-masthead .active {
+    color: black;
+    border-bottom-color: black;
+}
+
+@media (min-width: 48em) {
+    .masthead-brand {
+        float: left;
+    }
+    .nav-masthead {
+        float: right;
+    }
+}
+
+.cover {
+    padding: 0 1.5rem;
+}
+.cover .btn-lg {
+    padding: 0.75rem 1.25rem;
+    font-weight: 700;
+}
+```
+
+In `routes/home/index.js` in `router.render` above the field `template: "home"` let's add the following:
+
+```
+style: "home"
+```
+
+Navigating to `http://localhost:3000/home` (after logging in) we should now see a cool home page, greeting our user and with a top navbar.

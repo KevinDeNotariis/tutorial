@@ -9,6 +9,7 @@ module.exports = () => {
         res.render("layout", {
             pageTitle: "Logout",
             template: "logout",
+            style: "logout",
         });
     });
 

@@ -9,6 +9,8 @@ module.exports = () => {
         res.render("layout", {
             pageTitle: "Login",
             template: "login",
+            style: "login",
+            script: "login",
         });
     });
 

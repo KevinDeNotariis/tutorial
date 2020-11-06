@@ -8,13 +8,6 @@ const {
 const router = express.Router();
 
 module.exports = () => {
-    router.get("/", (req, res) => {
-        res.render("layout", {
-            pageTitle: "Register",
-            template: "register",
-        });
-    });
-
     router.post("/", validateAndSanitize, register);
 
     return router;
