@@ -1,0 +1,49 @@
+[
+    {
+        "date": "2020/10/12",
+        "exercises": [
+            {
+                "name": "dumbell press",
+                "sets": [
+                    { "weight": 30, "reps": 10 },
+                    {
+                        "weight": 32,
+                        "reps": 10
+                    }
+                ]
+            },
+            {
+                "name": "reverse fly",
+                "sets": [
+                    {
+                        "weight": 12,
+                        "reps": 10
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "date": "2020/10/14",
+        "exercises": [
+            {
+                "name": "barbell curl",
+                "sets": [
+                    {
+                        "weight": 10,
+                        "reps": 10
+                    }
+                ]
+            },
+            {
+                "name": "triceps pushdown",
+                "sets": [
+                    {
+                        "weight": 25,
+                        "reps": 12
+                    }
+                ]
+            }
+        ]
+    }
+]

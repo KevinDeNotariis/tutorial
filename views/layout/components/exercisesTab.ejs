@@ -1,0 +1,89 @@
+<div class="tab-content" id="nav-tabContent">
+    <div
+        class="tab-pane fade show active"
+        id="list-day1"
+        role="tabpanel"
+        aria-labelledby="list-day1-list"
+    >
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Exercise</th>
+                    <th scope="col">Weight (kg)</th>
+                    <th scope="col">Reps</th>
+                </tr>
+            </thead>
+            <tbody class="tableBody">
+                <tr>
+                    <td>Dumbell Press</td>
+                    <td>100</td>
+                    <td>10</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <form class="addSet" method="POST" action="/home/training/addSeries">
+            <select
+                name="exercise"
+                class="exercise selectpicker"
+                data-live-search="true"
+            >
+                <option>Dumbell press</option>
+                <option>Reverse fly</option>
+                <option>Barbell curl</option>
+            </select>
+            <input class="weight" name="weight" placeholder="weight" />
+            <input class="reps" name="reps" placeholder="reps" />
+            <input class="btn btn-success" value="Ok" type="submit" />
+        </form>
+    </div>
+    <div
+        class="tab-pane fade"
+        id="list-day2"
+        role="tabpanel"
+        aria-labelledby="list-day2-list"
+    >
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Exercise</th>
+                    <th scope="col">Weight</th>
+                    <th scope="col">Reps</th>
+                </tr>
+            </thead>
+            <tbody class="tableBody">
+                <tr>
+                    <td>Dumbell Press</td>
+                    <td>100</td>
+                    <td>10</td>
+                </tr>
+            </tbody>
+        </table>
+        <form class="addSet" method="POST" action="/home/training/addSeries">
+            <input
+                class="exercise"
+                name="exerciseName"
+                placeholder="exercise"
+            />
+            <input class="weight" name="weight" placeholder="weight" />
+            <input class="reps" name="reps" placeholder="reps" />
+            <input value="Ok" type="submit" />
+        </form>
+    </div>
+    <div
+        class="tab-pane fade"
+        id="list-day3"
+        role="tabpanel"
+        aria-labelledby="list-day3-list"
+    >
+        Day 3 - 2020/10/14
+    </div>
+    <div
+        class="tab-pane fade"
+        id="list-day4"
+        role="tabpanel"
+        aria-labelledby="list-day4-list"
+    >
+        Day 4 - 2020/10/16
+    </div>
+</div>

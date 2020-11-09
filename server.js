@@ -23,12 +23,24 @@ app.use(
     express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"))
 );
 app.use(
+    "/styles/css",
+    express.static(
+        path.join(__dirname, "node_modules/bootstrap-select/dist/css")
+    )
+);
+app.use(
     "/js",
     express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"))
 );
 app.use(
     "/js",
     express.static(path.join(__dirname, "node_modules/jquery/dist"))
+);
+app.use(
+    "/js",
+    express.static(
+        path.join(__dirname, "node_modules/bootstrap-select/dist/js")
+    )
 );
 
 app.locals.siteName = "* Web Site Name *";

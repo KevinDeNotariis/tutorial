@@ -1,0 +1,23 @@
+<div class="container">
+    <div class="jumbotron">
+        <h1>Hello Training page</h1>
+    </div>
+    <div class="row">
+        <div class="col-sm">
+            <%- include("../layout/components/daysTab.ejs") %>
+
+            <button
+                class="btn btn-primary mt-4"
+                data-toggle="modal"
+                data-target="#exampleModalCenter"
+            >
+                Add
+            </button>
+
+            <%- include("../layout/components/modalFormDay.ejs") %>
+        </div>
+        <div class="col-8 exercisesTab">
+            <%- include("../layout/components/exercisesTab.ejs") %>
+        </div>
+    </div>
+</div>

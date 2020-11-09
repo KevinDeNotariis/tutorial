@@ -1,5 +1,7 @@
 const express = require("express");
 
+const trainingRoute = require("./training");
+
 const router = express.Router();
 
 module.exports = () => {
@@ -10,6 +12,8 @@ module.exports = () => {
             style: "home",
         });
     });
+
+    router.use("/training", trainingRoute());
 
     return router;
 };
