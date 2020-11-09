@@ -15,6 +15,25 @@ const validateAndSanitize = [
 
 const validateDate = [check("date").trim().isDate().escape()];
 
+function fetchDays(accessToken, callback) {
+    const daysPlusExercises = [];
+    const decode = jwt.decode(accessToken, process.env.ACCESS_TOKEN_SECRET);
+
+    Exercise.find({ user_id: decode._id })
+        .sort("date")
+        .exec((err, docs) => {
+            if (err) console.log(err);
+            docs.map((elem) => {
+                daysPlusExercises.push({
+                    day: new Date(elem.date).toISOString().split("T")[0],
+                    exercises: elem.exercises,
+                });
+            });
+            console.log("Fetch completed");
+            callback(daysPlusExercises);
+        });
+}
+
 const addDay = (req, res, next) => {
     const errors = validationResult(req.body);
 
@@ -23,31 +42,22 @@ const addDay = (req, res, next) => {
     } else {
         let accessToken = req.cookies.jwt;
 
-        console.log("- Verifying access token");
-        jwt.verify(
-            accessToken,
-            process.env.ACCESS_TOKEN_SECRET,
-            (err, decode) => {
-                if (err)
-                    return res
-                        .status(401)
-                        .json({ message: "User not Authenticated" });
+        console.log("- Decoding access token");
+        const decode = jwt.decode(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
-                console.log("- Access token verified, adding day into DB");
+        console.log("- Access token verified, adding day into DB");
 
-                const newExercise = new Exercise({
-                    user_id: decode._id,
-                    date: req.body.date,
-                });
-                newExercise.save((err, doc) => {
-                    if (err) {
-                        return res.status(400).json({ message: err });
-                    } else {
-                        return res.send(doc);
-                    }
-                });
+        const newExercise = new Exercise({
+            user_id: decode._id,
+            date: req.body.date,
+        });
+        newExercise.save((err, doc) => {
+            if (err) {
+                return res.status(400).json({ message: err });
+            } else {
+                return res.send(doc);
             }
-        );
+        });
     }
 };
 
@@ -59,8 +69,12 @@ const addSet = (req, res, next) => {
     } else {
         console.log("- Searching in DB for the Day required");
 
+        const decode = jwt.decode(
+            req.cookies.jwt,
+            process.env.ACCESS_TOKEN_SECRET
+        );
         Exercise.findOne(
-            { date: new Date(req.body.date) },
+            { user_id: decode._id, date: new Date(req.body.date) },
             (err, exerciseDay) => {
                 if (err) return res.status(400).json({ message: err });
 
@@ -154,4 +168,5 @@ module.exports = {
     validateAndSanitize,
     addSet,
     addDay,
+    fetchDays,
 };

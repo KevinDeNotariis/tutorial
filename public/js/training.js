@@ -78,7 +78,7 @@ $("#addDay").on("submit", function (event) {
                     
                 </tbody>
                 </table>
-                <form class="addSet" method="POST" action="/home/training/addSeries">
+                <form class="addSet" method="POST" action="/home/training/addSet">
                     <select
                     name="exercise"
                     class="exercise selectpicker"
@@ -94,6 +94,12 @@ $("#addDay").on("submit", function (event) {
                 </form>
             </div>
             `);
+
+            //Dismiss the modal form after clicking the Save button
+            $("#modalFormAddDay").modal("toggle");
+
+            //Allows bootstrap-select to correctly render the newly created dropdown
+            $(".selectpicker").selectpicker("refresh");
         })
         .catch(function (err) {
             console.error(err);

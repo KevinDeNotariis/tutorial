@@ -1,41 +1,13 @@
 <div class="list-group" id="list-tab" role="tablist">
+    <% daysPlusExercises.map((elem,key) => {%>
     <a
-        class="list-group-item list-group-item-action active"
-        id="list-day1-list"
+        class="list-group-item list-group-item-action <% if(key==0) { %> active <% }%>"
+        id="list-<%= elem.day %>-list"
         data-toggle="list"
-        href="#list-day1"
+        href="#list-<%= elem.day %>"
         role="tab"
-        aria-controls="day1"
-        >2020-10-10</a
+        aria-controls="<%= elem.day %>"
+        ><%= elem.day %></a
     >
-    <a
-        class="list-group-item list-group-item-action"
-        id="list-day2-list"
-        data-toggle="list"
-        href="#list-day2"
-        role="tab"
-        aria-controls="day2"
-    >
-        2020-10-12
-    </a>
-    <a
-        class="list-group-item list-group-item-action"
-        id="list-day3-list"
-        data-toggle="list"
-        href="#list-day3"
-        role="tab"
-        aria-controls="day3"
-    >
-        2020-10-14
-    </a>
-    <a
-        class="list-group-item list-group-item-action"
-        id="list-day4-list"
-        data-toggle="list"
-        href="#list-day4"
-        role="tab"
-        aria-controls="day4"
-    >
-        2020-10-16
-    </a>
+    <%})%>
 </div>

@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const SetSchema = new Schema({
+    _id: false,
     weight: {
         type: Number,
         required: true,
@@ -14,6 +15,7 @@ const SetSchema = new Schema({
 });
 
 const ExerciseSchema = new Schema({
+    _id: false,
     name: {
         type: String,
         required: true,

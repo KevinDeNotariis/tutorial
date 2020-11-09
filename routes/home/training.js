@@ -1,6 +1,7 @@
 const express = require("express");
 
 const {
+    fetchDays,
     addSet,
     addDay,
     validateAndSanitize,
@@ -11,11 +12,14 @@ const router = express.Router();
 
 module.exports = () => {
     router.get("/", (req, res) => {
-        res.render("layout", {
-            pageTitle: "Training",
-            template: "training",
-            style: "training",
-            script: "training",
+        fetchDays(req.cookies.jwt, (daysPlusExercises) => {
+            res.render("layout", {
+                pageTitle: "Training",
+                template: "training",
+                style: "training",
+                script: "training",
+                daysPlusExercises: daysPlusExercises,
+            });
         });
     });
 
