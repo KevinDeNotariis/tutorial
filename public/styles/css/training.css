@@ -4,3 +4,40 @@
         max-width: 100%;
     }
 }
+
+body {
+    background-color: #333;
+    color: white;
+}
+
+.jumbotron {
+    background-color: rgb(92, 87, 87);
+}
+
+a.list-group-item {
+    background-color: rgb(92, 87, 87);
+    color: white;
+}
+
+.table {
+    color: white;
+}
+
+input {
+    background-color: #333;
+    color: white;
+    border-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: white;
+    border-top-style: none;
+    border-right-style: none;
+    border-left-style: none;
+}
+
+::-webkit-input-placeholder {
+    color: white;
+}
+
+input:focus {
+    outline: none;
+}

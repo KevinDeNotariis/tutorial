@@ -60,7 +60,17 @@ $("#addDay").on("submit", function (event) {
                 `
             );
 
-            $("#nav-tabContent").append(` 
+            let $newTab = $(".tab-pane").clone(true);
+            $newTab
+                .attr("id", `list-${date}`)
+                .attr("aria-labelledby", `list-${date}-list`);
+
+            $newTab.find(".tableBody").empty();
+            $newTab.removeClass("active");
+
+            $("#nav-tabContent").append($newTab);
+
+            /*$("#nav-tabContent").append(` 
             <div
             class="tab-pane fade"
             id="list-${date}"
@@ -93,13 +103,13 @@ $("#addDay").on("submit", function (event) {
                     <input class="btn btn-success" value="Ok" type="submit" />
                 </form>
             </div>
-            `);
+            `);*/
 
             //Dismiss the modal form after clicking the Save button
             $("#modalFormAddDay").modal("toggle");
-
+            location.reload();
             //Allows bootstrap-select to correctly render the newly created dropdown
-            $(".selectpicker").selectpicker("refresh");
+            //$(".selectpicker").selectpicker("refresh");
         })
         .catch(function (err) {
             console.error(err);

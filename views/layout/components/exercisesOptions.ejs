@@ -1,0 +1,7 @@
+<% exercises.map(group => { %>
+<optgroup label="<%=group.target %>">
+    <% group.exercises.map(exercise => { %>
+    <option data-tokens="<%= group.target %>"><%=exercise %></option>
+    <% }) %>
+</optgroup>
+<% }) %>

@@ -1,6 +1,8 @@
 const { check, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 const ExerciseSchema = require("../models/exerciseModel");
 
@@ -14,6 +16,10 @@ const validateAndSanitize = [
 ];
 
 const validateDate = [check("date").trim().isDate().escape()];
+
+function fetchExercises() {
+    return JSON.parse(fs.readFileSync("exercisesList.json"));
+}
 
 function fetchDays(accessToken, callback) {
     const daysPlusExercises = [];
@@ -45,19 +51,32 @@ const addDay = (req, res, next) => {
         console.log("- Decoding access token");
         const decode = jwt.decode(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
-        console.log("- Access token verified, adding day into DB");
+        console.log(
+            "- Access token verified, checking if this day already exists in DB"
+        );
 
-        const newExercise = new Exercise({
-            user_id: decode._id,
-            date: req.body.date,
-        });
-        newExercise.save((err, doc) => {
-            if (err) {
-                return res.status(400).json({ message: err });
-            } else {
-                return res.send(doc);
+        Exercise.findOne(
+            { user_id: decode._id, date: req.body.date },
+            (err, doc) => {
+                if (err) return res.status(400).json({ message: err });
+                if (doc) {
+                    console.log("Day already exists");
+                    return res.json({ message: "Already exists" });
+                } else {
+                    const newExercise = new Exercise({
+                        user_id: decode._id,
+                        date: req.body.date,
+                    });
+                    newExercise.save((err, doc) => {
+                        if (err) {
+                            return res.status(400).json({ message: err });
+                        } else {
+                            return res.send(doc);
+                        }
+                    });
+                }
             }
-        });
+        );
     }
 };
 
@@ -169,4 +188,5 @@ module.exports = {
     addSet,
     addDay,
     fetchDays,
+    fetchExercises,
 };

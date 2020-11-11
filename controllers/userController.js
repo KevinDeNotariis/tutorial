@@ -70,6 +70,7 @@ const logout = (req, res) => {
             console.log("- Removing associated cookie");
             res.cookie("jwt", { maxAge: 0 });
             console.log("Redirecting to welcome page");
+
             return res.redirect("/");
         });
     });

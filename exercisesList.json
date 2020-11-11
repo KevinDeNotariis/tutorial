@@ -1,0 +1,59 @@
+[
+    {
+        "target": "legs",
+        "exercises": [
+            "squat",
+            "leg press",
+            "lunge",
+            "deadlift",
+            "leg extension",
+            "leg curl",
+            "standing calf rises",
+            "seated calf rises"
+        ]
+    },
+    {
+        "target": "chest",
+        "exercises": [
+            "barbell bench press",
+            "chest fly",
+            "push-up",
+            "dumbbell bench press",
+            "cable crossover",
+            "dips"
+        ]
+    },
+    {
+        "target": "lats",
+        "exercises": [
+            "pulldown",
+            "pull-up",
+            "bent-over barbell row",
+            "bent-over dumbbell row",
+            "T-bar row",
+            "low seated row"
+        ]
+    },
+    {
+        "target": "shoulders",
+        "exercises": [
+            "shoulder press",
+            "upright row",
+            "military press",
+            "shoulder fly"
+        ]
+    },
+    {
+        "target": "triceps",
+        "exercises": [
+            "pushdown",
+            "triceps extension - machine",
+            "triceps extension lying barbell",
+            "triceps extension dumbbell"
+        ]
+    },
+    {
+        "target": "biceps",
+        "exercises": ["barbell standing curl", "hammer curl", "dumbbell curl"]
+    }
+]

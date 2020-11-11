@@ -25,15 +25,18 @@
             </tbody>
         </table>
 
-        <form class="addSet" method="POST" action="/home/training/addSeries">
+        <form
+            autocomplete="off"
+            class="addSet"
+            method="POST"
+            action="/home/training/addSeries"
+        >
             <select
                 name="exercise"
                 class="exercise selectpicker"
                 data-live-search="true"
             >
-                <option>Dumbell press</option>
-                <option>Reverse fly</option>
-                <option>Barbell curl</option>
+                <%- include("./exercisesOptions.ejs") %>
             </select>
             <input class="weight" name="weight" placeholder="weight" />
             <input class="reps" name="reps" placeholder="reps" />
