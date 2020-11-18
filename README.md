@@ -3111,8 +3111,8 @@ Finally, let's open up `views/pages/home.ejs` and substitute its content with th
             <h3 class="masthead-brand">Home</h3>
             <nav class="nav nav-masthead justify-content-center">
                 <a class="nav-link active" href="#">Home</a>
-                <a class="nav-link" href="\training">Training</a>
-                <a class="nav-link" href="\logout">Logout</a>
+                <a class="nav-link" href="/training">Training</a>
+                <a class="nav-link" href="/logout">Logout</a>
             </nav>
         </div>
     </header>
@@ -3232,3 +3232,57 @@ style: "home"
 ```
 
 Navigating to `http://localhost:3000/home` (after logging in) we should now see a cool home page, greeting our user and with a top navbar.
+
+At this point the new folder structure should look like the following:
+
+```
+.
+├── _controllers
+│   └── userController.js
+├── _models
+│   ├── refreshTokenModel.js
+│   └── userModel.js
+├── _node_modules
+│   └── ...
+├── _public
+│   ├── _img
+│   │   ├── front-image.jpg
+│   │   ├── home.jpg
+│   │   ├── login.jpg
+│   │   └── logout.jpg
+│   ├── _styles
+│   │   └── _css
+│   │       ├── home.css
+│   │       ├── login.css
+│   │       ├── logout.css
+│   │       └── style.css
+│   └─ _js
+│      └── login.js
+├── _routes
+│   ├── _home
+│   │   └── index.js
+│   ├── _login
+│   │   └── index.js
+│   ├── _logout
+│   │   └── index.js
+│   ├── _register
+│   │   └── index.js
+│   ├── _user
+│   │   └── index.js
+│   └─ index.js
+├── _views
+│   ├── _layout
+│   │   ├── _components
+│   │   │   ├── footer.ejs
+│   │   │   └── scripts.ejs
+│   │   └── index.js
+│   └── _pages
+│       ├── home.ejs
+│       ├── index.ejs
+│       ├── login.ejs
+│       └── logout.ejs
+├── .env
+├── package-lock.json
+├── package.json
+└── server.js
+```
