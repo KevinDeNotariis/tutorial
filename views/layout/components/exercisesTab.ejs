@@ -1,47 +1,49 @@
 <div class="tab-content" id="nav-tabContent">
-    <% daysPlusExercises.map((elem, key) => { %>
-    <div
-        class="tab-pane fade show <% if(key==0) { %> active <% }%>"
-        id="list-<%= elem.day %>"
-        role="tabpanel"
-        aria-labelledby="list-<%= elem.day %>-list"
-    >
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th scope="col">Exercise</th>
-                    <th scope="col">Weight (kg)</th>
-                    <th scope="col">Reps</th>
-                </tr>
-            </thead>
-            <tbody class="tableBody">
-                <% elem.exercises.map(exer => { %> <% exer.sets.map( set => { %>
-                <tr>
-                    <td><%= exer.name %></td>
-                    <td><%= set.weight %></td>
-                    <td><%= set.reps %></td>
-                </tr>
-                <% }) %> <% }) %>
-            </tbody>
-        </table>
+  <% daysPlusExercises.map((elem, key) => { %>
+  <div
+    class="tab-pane fade show <% if(key==0) { %> active <% }%>"
+    id="list-<%= elem.day %>"
+    role="tabpanel"
+    aria-labelledby="list-<%= elem.day %>-list"
+  >
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th scope="col">Exercise</th>
+          <th scope="col">Weight (kg)</th>
+          <th scope="col">Reps</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody class="tableBody">
+        <% elem.exercises.map(exer => { %> <% exer.sets.map( set => { %>
+        <tr>
+          <td><%= exer.name %></td>
+          <td><%= set.weight %></td>
+          <td><%= set.reps %></td>
+          <td><button class="deleteSet btn btn-danger btn-sm">X</button></td>
+        </tr>
+        <% }) %> <% }) %>
+      </tbody>
+    </table>
 
-        <form
-            autocomplete="off"
-            class="addSet"
-            method="POST"
-            action="/home/training/addSeries"
-        >
-            <select
-                name="exercise"
-                class="exercise selectpicker"
-                data-live-search="true"
-            >
-                <%- include("./exercisesOptions.ejs") %>
-            </select>
-            <input class="weight" name="weight" placeholder="weight" />
-            <input class="reps" name="reps" placeholder="reps" />
-            <input class="btn btn-success" value="Ok" type="submit" />
-        </form>
-    </div>
-    <% }) %>
+    <form
+      autocomplete="off"
+      class="addSet"
+      method="POST"
+      action="/home/training/addSeries"
+    >
+      <select
+        name="exercise"
+        class="exercise selectpicker"
+        data-live-search="true"
+      >
+        <%- include("./exercisesOptions.ejs") %>
+      </select>
+      <input class="weight" name="weight" placeholder="weight" />
+      <input class="reps" name="reps" placeholder="reps" />
+      <input class="btn btn-success" value="Ok" type="submit" />
+    </form>
+  </div>
+  <% }) %>
 </div>

@@ -1,13 +1,14 @@
 <div class="list-group" id="list-tab" role="tablist">
-    <% daysPlusExercises.map((elem,key) => {%>
-    <a
-        class="list-group-item py-2 list-group-item-action <% if(key==0) { %> active <% }%>"
-        id="list-<%= elem.day %>-list"
-        data-toggle="list"
-        href="#list-<%= elem.day %>"
-        role="tab"
-        aria-controls="<%= elem.day %>"
-        ><%= elem.day %></a
-    >
-    <%})%>
+  <% daysPlusExercises.map((elem,key) => {%>
+  <a
+    style="text-align: center"
+    class="list-group-item py-2 list-group-item-action <% if(key==0) { %> active <% }%>"
+    id="list-<%= elem.day %>-list"
+    data-toggle="list"
+    href="#list-<%= elem.day %>"
+    role="tab"
+    aria-controls="<%= elem.day %>"
+    ><%= elem.day %></a
+  >
+  <%})%>
 </div>

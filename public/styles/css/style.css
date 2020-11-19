@@ -1,93 +1,101 @@
 .footer-text {
-    color: white;
+  color: white;
+}
+
+.homePAge {
+  min-height: 100%;
+}
+
+html {
+  height: 100%;
 }
 
 img.bg {
-    min-height: 100%;
-    min-width: 1700px;
+  min-height: 100%;
+  min-width: 1700px;
 
-    width: 100%;
-    height: auto;
+  width: 100%;
+  height: auto;
 
-    position: fixed;
-    top: 0;
-    left: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 @media screen and (max-width: 1700px) {
-    img.bg {
-        left: 50%;
-        margin-left: -850px;
-    }
+  img.bg {
+    left: 50%;
+    margin-left: -850px;
+  }
 }
 
 .up-front {
-    position: relative;
-    z-index: 2;
+  position: relative;
+  z-index: 2;
 }
 
 .underlined-a {
-    text-decoration: none;
-    color: white;
-    padding-bottom: 0.15em;
-    box-sizing: border-box;
-    box-shadow: inset 0 -0.2em 0 white;
-    transition: 0.2s;
+  text-decoration: none;
+  color: white;
+  padding-bottom: 0.15em;
+  box-sizing: border-box;
+  box-shadow: inset 0 -0.2em 0 white;
+  transition: 0.2s;
 }
 .underlined-a:hover {
-    color: #222;
-    box-shadow: inset 0 -2em 0 white;
-    transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
+  color: #222;
+  box-shadow: inset 0 -2em 0 white;
+  transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
 }
 
 .brk-btn {
-    position: relative;
-    background: none;
-    color: rgba(255, 255, 255, 0.356);
-    text-transform: uppercase;
-    text-decoration: none;
-    border: 0.2em solid rgba(255, 255, 255, 0.356);
-    padding: 0.8em 2em;
-    font-size: 20px;
-    transition: 0.3s;
+  position: relative;
+  background: none;
+  color: rgba(255, 255, 255, 0.356);
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 0.2em solid rgba(255, 255, 255, 0.356);
+  padding: 0.8em 2em;
+  font-size: 20px;
+  transition: 0.3s;
 }
 .brk-btn:hover {
-    color: white;
-    border: 0.2em solid white;
-    padding: 1em 2.4em;
-    text-decoration: underline;
-    font-size: 22px;
+  color: white;
+  border: 0.2em solid white;
+  padding: 1em 2.4em;
+  text-decoration: underline;
+  font-size: 22px;
 }
 
 .brk-btn::before {
-    content: "";
-    display: block;
-    position: absolute;
-    width: 10%;
-    background: #222;
-    height: 0.3em;
-    right: 20%;
-    top: -0.21em;
-    transform: skewX(-45deg);
-    -webkit-transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
-    transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
+  content: "";
+  display: block;
+  position: absolute;
+  width: 10%;
+  background: #222;
+  height: 0.3em;
+  right: 20%;
+  top: -0.21em;
+  transform: skewX(-45deg);
+  -webkit-transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
+  transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
 }
 .brk-btn::after {
-    content: "";
-    display: block;
-    position: absolute;
-    width: 10%;
-    background: #222;
-    height: 0.3em;
-    left: 20%;
-    bottom: -0.25em;
-    transform: skewX(45deg);
-    -webkit-transition: all 0.45 cubic-bezier(0.86, 0, 0.07, 1);
-    transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
+  content: "";
+  display: block;
+  position: absolute;
+  width: 10%;
+  background: #222;
+  height: 0.3em;
+  left: 20%;
+  bottom: -0.25em;
+  transform: skewX(45deg);
+  -webkit-transition: all 0.45 cubic-bezier(0.86, 0, 0.07, 1);
+  transition: all 0.45s cubic-bezier(0.86, 0, 0.07, 1);
 }
 .brk-btn:hover::before {
-    right: 80%;
+  right: 80%;
 }
 .brk-btn:hover::after {
-    left: 80%;
+  left: 80%;
 }

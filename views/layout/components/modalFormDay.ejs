@@ -1,45 +1,37 @@
 <div
-    class="modal fade"
-    id="modalFormAddDay"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="modalFormAddDayTitle"
-    aria-hidden="true"
+  class="modal fade"
+  id="modalFormAddDay"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modalFormAddDayTitle"
+  aria-hidden="true"
 >
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalFormAddDayTitle">
-                    Add new training day
-                </h5>
-                <button
-                    type="button"
-                    class="close"
-                    data-dismiss="modal"
-                    aria-label="Close"
-                >
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="addDay" method="POST" action="/home/training/addDay">
-                <div class="modal-body">
-                    <input name="date" type="date" class="date" />
-                </div>
-                <div class="modal-footer">
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-dismiss="modal"
-                    >
-                        Close
-                    </button>
-                    <input
-                        type="submit"
-                        value="Save Changes"
-                        class="btn btn-primary"
-                    />
-                </div>
-            </form>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" style="background-color: #333">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalFormAddDayTitle">
+          Add a new training day
+        </h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="addDay" method="POST" action="/home/training/addDay">
+        <div class="modal-body">
+          <input name="date" type="date" class="date" />
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+          <input type="submit" value="Save Changes" class="btn btn-primary" />
+        </div>
+      </form>
     </div>
+  </div>
 </div>
