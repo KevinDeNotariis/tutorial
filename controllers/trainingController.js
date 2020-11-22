@@ -5,7 +5,6 @@ const fs = require("fs");
 const path = require("path");
 
 const ExerciseSchema = require("../models/exerciseModel");
-const { set } = require("../models/exerciseModel");
 
 const Exercise = mongoose.model("Exercise", ExerciseSchema);
 
@@ -173,8 +172,8 @@ const deleteSet = (req, res) => {
   console.log(
     "- Decoding payload of JWT of user to match the id in the exercise collection"
   );
-  const decode = jwt.decode(req.cookies.jwt, process.env.ACCESS_TOKEN_SECRET);
-  console.log(`- User id : ${decode._id}`);
+  const payload = jwt.decode(req.cookies.jwt, process.env.ACCESS_TOKEN_SECRET);
+  console.log(`- User id : ${payload._id}`);
   console.log("- Searching ad removing the following set from the DB:");
   console.log(req.body);
 
@@ -189,7 +188,7 @@ const deleteSet = (req, res) => {
 
   Exercise.findOne(
     {
-      user_id: decode._id,
+      user_id: payload._id,
       date: new Date(req.body.date),
       "exercises.name": req.body.exercise,
     },
@@ -203,7 +202,7 @@ const deleteSet = (req, res) => {
 
       Exercise.updateOne(
         {
-          user_id: decode._id,
+          user_id: payload._id,
           date: new Date(req.body.date),
           "exercises.name": req.body.exercise,
         },
@@ -254,9 +253,28 @@ const computeNewSetsArrayWithoutGivenSet = (
   return sets;
 };
 
+const deleteDay = (req, res) => {
+  console.log("- Decoding user token to extract user_id");
+  const payload = jwt.decode(req.cookies.jwt, process.env.ACCESS_TOKEN_SECRET);
+
+  console.log("- Retrieving the day from DB and deleting it");
+  Exercise.deleteOne(
+    {
+      user_id: payload._id,
+      date: new Date(req.body.date),
+    },
+    (err) => {
+      if (err) return res.send({ message: err });
+      console.log("Element deleted correctly");
+      return res.send("ok");
+    }
+  );
+};
+
 module.exports = {
   validateDate,
   validateAndSanitize,
+  deleteDay,
   deleteSet,
   addSet,
   addDay,

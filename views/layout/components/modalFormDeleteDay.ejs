@@ -1,17 +1,15 @@
 <div
   class="modal fade"
-  id="modalFormAddDay"
+  id="modalFormDeleteDay"
   tabindex="-1"
   role="dialog"
-  aria-labelledby="modalFormAddDayTitle"
+  aria-labelledby="modalFormDeleteDayTitle"
   aria-hidden="true"
 >
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content" style="background-color: #333">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalFormAddDayTitle">
-          Add a new training day
-        </h5>
+        <h5 class="modal-title" id="modalFormDeleteDayTitle">Day deleting</h5>
         <button
           type="button"
           class="close"
@@ -21,15 +19,16 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form id="addDay">
+      <form id="deleteDay">
         <div class="modal-body">
-          <input name="date" type="date" class="date" />
+          <p>Are you sure you want to delete a whole training day?</p>
         </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">
-            Close
+            Cancel
           </button>
-          <input type="submit" value="Save Changes" class="btn btn-primary" />
+          <input type="submit" value="Confirm" class="btn btn-primary" />
         </div>
       </form>
     </div>

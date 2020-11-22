@@ -1,3 +1,9 @@
+/* ------------------------------------------------- *
+ *                                                   *
+ *                ADD SET BUTTON                     *
+ *                                                   *
+ *  -------------------------------------------------*/
+
 $(".addSet").on("submit", function (event) {
   event.preventDefault();
   var data = {
@@ -30,6 +36,12 @@ $(".addSet").on("submit", function (event) {
       console.error(err);
     });
 });
+
+/* ------------------------------------------------- *
+ *                                                   *
+ *                ADD DAY BUTTON                     *
+ *                                                   *
+ *  -------------------------------------------------*/
 
 $("#addDay").on("submit", function (event) {
   event.preventDefault();
@@ -80,6 +92,12 @@ $("#addDay").on("submit", function (event) {
     });
 });
 
+/* ------------------------------------------------- *
+ *                                                   *
+ *              DELETE SET BUTTON                    *
+ *                                                   *
+ *  -------------------------------------------------*/
+
 $(".deleteSet").on("click", function (event) {
   event.preventDefault();
   const data = [];
@@ -104,16 +122,48 @@ $(".deleteSet").on("click", function (event) {
     type: "DELETE",
     url: "/home/training/deleteSet",
   }).then(function (res) {
-    $this.parents("tr").remove();
+    if (res === "ok") {
+      $this.parents("tr").remove();
 
-    // Create the snackbar telling the user that the Set has been deleted
-    const $elem = $("<div>", { class: "snackbar show" });
-    $elem.text("Set deleted");
-    $(".jumbotron").append($elem);
+      // Create the snackbar telling the user that the Set has been deleted
+      const $elem = $("<div>", { class: "snackbar show" });
+      $elem.text("Set deleted");
+      $(".jumbotron").append($elem);
 
-    // After 3 seconds, remove the show class from DIV
-    setTimeout(function () {
-      $elem.remove();
-    }, 3000);
+      // After 3 seconds, remove the show class from DIV
+      setTimeout(function () {
+        $elem.remove();
+      }, 3000);
+    }
+  });
+});
+
+/* ------------------------------------------------- *
+ *                                                   *
+ *              DELETE DAY BUTTON                    *
+ *                                                   *
+ *  -------------------------------------------------*/
+
+$("#deleteDay").on("submit", function (e) {
+  e.preventDefault();
+
+  const date = $(".list-group-item-action.active").text();
+
+  $.ajax({
+    data: {
+      date: date,
+    },
+    type: "DELETE",
+    url: "/home/training/deleteDay",
+  }).then(function (res) {
+    if (res === "ok") {
+      //Dismiss the modal form after clicking the Save button
+      $("#modalFormDeleteDay").modal("toggle");
+
+      //Reload page after less than 1 sec
+      setTimeout(function () {
+        location.reload();
+      }, 800);
+    }
   });
 });

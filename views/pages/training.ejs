@@ -14,9 +14,19 @@
         Add
       </button>
 
-      <%- include("../layout/components/modalFormDay.ejs") %>
+      <button
+        class="btn btn-danger mt-4 modal-btn-delete-day"
+        data-toggle="modal"
+        data-target="#modalFormDeleteDay"
+      >
+        Delete
+      </button>
+
+      <!-- prettier-ignore -->
+      <%- include("../layout/components/modalFormDay.ejs") %> 
+      <%- include("../layout/components/modalFormDeleteDay.ejs") %>
     </div>
-    <div class="col-10 exercisesTab">
+    <div class="col-8 exercisesTab">
       <%- include("../layout/components/exercisesTab.ejs") %>
     </div>
   </div>

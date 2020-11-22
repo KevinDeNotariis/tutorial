@@ -6,6 +6,7 @@ const {
   addSet,
   addDay,
   deleteSet,
+  deleteDay,
   validateAndSanitize,
   validateDate,
 } = require("../../controllers/trainingController");
@@ -31,6 +32,7 @@ module.exports = () => {
   router.post("/addDay", validateDate, addDay);
 
   router.delete("/deleteSet", deleteSet);
+  router.delete("/deleteDay", deleteDay);
 
   return router;
 };
